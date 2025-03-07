@@ -1,0 +1,50 @@
+Task: Build a simple cart system with Pinia.
+ 
+1. Create a Pinia Store (useCartStore.js)
+ 
+State:
+ 
+A list of products available for purchase.
+ 
+A list of items added to the cart.
+ 
+ 
+Getters:
+ 
+Compute the total price of items in the cart.
+ 
+Compute the total number of items in the cart.
+ 
+ 
+Actions:
+ 
+Add a product to the cart.
+ 
+Remove a product from the cart.
+ 
+Increase/Decrease the quantity of a product in the cart.
+ 
+ 
+ 
+ 
+2. Create a ProductList.vue component
+ 
+Displays a list of available products.
+ 
+Each product should have a name, price, and "Add to Cart" button.
+ 
+When clicked, the product should be added to the cart using the Pinia store.
+ 
+ 
+ 
+3. Create a Cart.vue component
+ 
+Displays the items in the cart along with their quantity and total price.
+ 
+Users should be able to:
+ 
+Increase/Decrease quantity of a product.
+ 
+Remove a product from the cart.
+ 
+Display the total price and total number of items in the cart (using getters).
