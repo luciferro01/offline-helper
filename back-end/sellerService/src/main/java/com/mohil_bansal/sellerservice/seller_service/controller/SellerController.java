@@ -1,6 +1,7 @@
 package com.mohil_bansal.sellerservice.seller_service.controller;
 
 
+import com.mohil_bansal.sellerservice.seller_service.dto.ProductOfferingDto;
 import com.mohil_bansal.sellerservice.seller_service.dto.SellerDto;
 import com.mohil_bansal.sellerservice.seller_service.service.SellerService;
 import com.mohil_bansal.sellerservice.seller_service.utils.CommonResponse;
@@ -40,4 +41,21 @@ public class SellerController {
                 CommonResponse<List<SellerDto>> response = CommonResponse.success(sellers, 200, "Sellers fetched successfully");
                 return ResponseEntity.ok(response);
         }
+
+    // Get product offerings by seller
+    @GetMapping("/{sellerId}/offerings")
+    public ResponseEntity<CommonResponse<List<ProductOfferingDto>>> getProductOfferings(@PathVariable Long sellerId) {
+        List<ProductOfferingDto> offerings = sellerService.getProductOfferingsBySeller(sellerId);
+        CommonResponse<List<ProductOfferingDto>> response = CommonResponse.success(offerings, 200, "Product offerings fetched successfully");
+        return ResponseEntity.ok(response);
+    }
+
+    // Add a product offering for a seller
+    @PostMapping("/{sellerId}/offerings")
+    public ResponseEntity<CommonResponse<ProductOfferingDto>> addProductOffering(@PathVariable Long sellerId, @RequestBody ProductOfferingDto offeringDto) {
+        offeringDto.setSellerId(sellerId);
+        ProductOfferingDto addedOffering = sellerService.addProductOffering(offeringDto);
+        CommonResponse<ProductOfferingDto> response = CommonResponse.success(addedOffering, 200, "Product offering added successfully");
+        return ResponseEntity.ok(response);
+    }
 }
