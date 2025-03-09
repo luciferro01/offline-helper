@@ -1,6 +1,6 @@
 package com.mohil_bansal.authorizationserver.dto;
 
-public class LoginRequest {
+public class LoginRequestDto {
     private String email;
     private String password;
 

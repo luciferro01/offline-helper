@@ -1,6 +1,5 @@
 package com.mohil_bansal.authorizationserver.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -8,11 +7,11 @@ import lombok.Setter;
 @Data
 @Getter
 @Setter
-public class TokenResponse {
+public class TokenResponseDto {
     private String accessToken;
     private String refreshToken;
 
-    public TokenResponse(String accessToken, String refreshToken) {
+    public TokenResponseDto(String accessToken, String refreshToken) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
     }

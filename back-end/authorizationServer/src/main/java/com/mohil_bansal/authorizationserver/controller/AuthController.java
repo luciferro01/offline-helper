@@ -1,90 +1,89 @@
 package com.mohil_bansal.authorizationserver.controller;
 
-
-import com.mohil_bansal.authorizationserver.dto.LoginRequest;
-import com.mohil_bansal.authorizationserver.dto.RefreshRequest;
-import com.mohil_bansal.authorizationserver.dto.TokenResponse;
-import com.mohil_bansal.authorizationserver.entity.User;
-import com.mohil_bansal.authorizationserver.exception.ResourceNotFoundException;
-import com.mohil_bansal.authorizationserver.repository.UserRepository;
+import com.mohil_bansal.authorizationserver.dto.LoginRequestDto;
+import com.mohil_bansal.authorizationserver.dto.RefreshRequestDto;
+import com.mohil_bansal.authorizationserver.dto.RegisterRequestDto;
+import com.mohil_bansal.authorizationserver.dto.TokenResponseDto;
+import com.mohil_bansal.authorizationserver.service.UserService;
 import com.mohil_bansal.authorizationserver.util.CommonResponse;
-import com.mohil_bansal.authorizationserver.util.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
+
     @Autowired
-    private AuthenticationManager authenticationManager;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private JwtTokenUtil jwtTokenUtil;
-    @Autowired
-    private RedisTemplate<String, String> redisTemplate;
+    private UserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody User user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(user);
-        return ResponseEntity.ok("User registered");
+    public ResponseEntity<CommonResponse<RegisterRequestDto>> register(@RequestBody RegisterRequestDto user) {
+        try {
+            RegisterRequestDto registeredUser = userService.register(user);
+            return ResponseEntity.ok(
+                    CommonResponse.success(registeredUser, 200, "User registered successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(CommonResponse.failure(e.getMessage(), 500));
+        }
     }
 
-    //    @PostMapping("/login")
-//    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-//        Authentication authentication = authenticationManager.authenticate(
-//                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-//        );
-//        User user = userRepository.findByEmail(request.getEmail());
-//        String accessToken = jwtTokenUtil.generateToken(user);
-//        String refreshToken = UUID.randomUUID().toString();
-//        redisTemplate.opsForValue().set(refreshToken, user.getId().toString(), 7, TimeUnit.DAYS);
-//        return ResponseEntity.ok(new TokenResponse(accessToken, refreshToken));
-//    }
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<CommonResponse<TokenResponseDto>> login(@RequestBody LoginRequestDto request) {
         try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-            );
-
-            User user = userRepository.findByEmail(request.getEmail());
-            String accessToken = jwtTokenUtil.generateToken(user);
-            String refreshToken = UUID.randomUUID().toString();
-            redisTemplate.opsForValue().set(refreshToken, user.getId().toString(), 7, TimeUnit.DAYS);
-
-            return ResponseEntity.ok(new TokenResponse(accessToken, refreshToken));
+            TokenResponseDto tokenResponse = userService.login(request);
+            return ResponseEntity.ok(
+                    CommonResponse.success(tokenResponse, 200, "Login successful"));
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new CommonResponse<>(false, 500, null, e.getMessage()));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(CommonResponse.failure("Invalid credentials", 401));
         }
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<?> refresh(@RequestBody RefreshRequest request) {
-        String userId = redisTemplate.opsForValue().get(request.getRefreshToken());
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid refresh token");
+    public ResponseEntity<CommonResponse<TokenResponseDto>> refresh(@RequestBody RefreshRequestDto request) {
+        try {
+            TokenResponseDto tokenResponse = userService.refreshToken(request);
+            return ResponseEntity.ok(
+                    CommonResponse.success(tokenResponse, 200, "Token refreshed successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(CommonResponse.failure(e.getMessage(), 401));
         }
-        User user = userRepository.findById(Long.parseLong(userId)).orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        String newAccessToken = jwtTokenUtil.generateToken(user);
-        return ResponseEntity.ok(new TokenResponse(newAccessToken, request.getRefreshToken()));
+    }
+
+    @GetMapping("/is-authorized")
+    public ResponseEntity<CommonResponse<Boolean>> isAuthorized(@RequestHeader("Authorization") String authHeader) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            boolean isValid = userService.validateToken(token);
+            return ResponseEntity.ok(
+                    CommonResponse.success(isValid, 200,
+                            isValid ? "User is authorized" : "User is not authorized"));
+        }
+        return ResponseEntity.ok(
+                CommonResponse.failure("No valid token provided", 200));
+    }
+
+    @GetMapping("/ok")
+    public  ResponseEntity<CommonResponse<String>> ok(){
+        return ResponseEntity.ok(
+                CommonResponse.success("Yes", 200, "Yes"));
+    }
+
+    @GetMapping("/validate")
+    public ResponseEntity<CommonResponse<Boolean>> validateToken(@RequestParam String token) {
+        boolean isValid = userService.validateToken(token);
+        return ResponseEntity.ok(
+                CommonResponse.success(isValid, 200, isValid ? "Token is valid" : "Token is invalid"));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<CommonResponse<Boolean>> logout(@RequestParam String refreshToken) {
+        boolean loggedOut = userService.logout(refreshToken);
+        return ResponseEntity.ok(
+                CommonResponse.success(loggedOut, 200, loggedOut ? "Logged out successfully" : "Logout failed"));
     }
 }

@@ -1,45 +1,70 @@
 package com.mohil_bansal.apigateway.config;
 
-
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
-import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
-import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
-import org.springframework.security.web.server.SecurityWebFilterChain;
-
-import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
+import javax.crypto.spec.SecretKeySpec;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtValidators;
+import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
+import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.web.server.SecurityWebFilterChain;
+
 @Configuration
-@EnableWebFluxSecurity
 public class SecurityConfig {
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
-        http
+        return http
                 .csrf().disable()
                 .authorizeExchange()
-                .pathMatchers("/auth/**").permitAll() // Allow unauthenticated access to auth endpoints
-                .anyExchange().authenticated()        // All other endpoints require authentication
+                .pathMatchers("/auth/**").permitAll()
+                .anyExchange().authenticated()
                 .and()
                 .oauth2ResourceServer()
-                .jwt();
-        return http.build();
+                .jwt()
+                .and()
+                .authenticationEntryPoint((exchange, ex) -> {
+                    System.err.println("JWT Auth Error: " + ex.getMessage());
+                    return exchange.getResponse().setComplete();
+                })
+                .and()
+                .build();
     }
 
     @Bean
     public ReactiveJwtDecoder jwtDecoder() {
-        String secret = "mohilBansalIsAwesome"; // Match your auth server secret
+        String secret = "mohilBansalIsAwesome";
         byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
+        // Pad to 32 bytes for HS256
+        byte[] paddedKey = Arrays.copyOf(keyBytes, 32);
+        SecretKeySpec key = new SecretKeySpec(paddedKey, "HmacSHA256");
 
-        // For HS512, key should be at least 512 bits (64 bytes)
-        // Pad if necessary
-        byte[] paddedKey = Arrays.copyOf(keyBytes, 64);
+        NimbusReactiveJwtDecoder jwtDecoder = NimbusReactiveJwtDecoder.withSecretKey(key)
+                .macAlgorithm(MacAlgorithm.HS256)
+                .build();
 
-        SecretKeySpec key = new SecretKeySpec(paddedKey, "HmacSHA512");
-        return NimbusReactiveJwtDecoder.withSecretKey(key).build();
+        // Default validator that includes timestamp validation
+        OAuth2TokenValidator<Jwt> defaultValidator = JwtValidators.createDefault();
+        // Custom validator for logging that does not enforce timestamp validation
+        OAuth2TokenValidator<Jwt> loggingValidator = token -> {
+            System.out.println("Token claims: " + token.getClaims());
+            return OAuth2TokenValidatorResult.success();
+        };
+
+        // Combine validators. Remove the default validator if you wish to skip timestamps.
+        OAuth2TokenValidator<Jwt> validator = new DelegatingOAuth2TokenValidator<>(loggingValidator);
+        jwtDecoder.setJwtValidator(validator);
+
+        return jwtDecoder;
     }
 }

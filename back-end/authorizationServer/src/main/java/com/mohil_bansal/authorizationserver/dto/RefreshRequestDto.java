@@ -3,7 +3,7 @@ package com.mohil_bansal.authorizationserver.dto;
 import lombok.Data;
 
 @Data
-public class RefreshRequest {
+public class RefreshRequestDto {
     private String refreshToken;
 
     public String getRefreshToken() { return refreshToken; }
