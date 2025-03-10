@@ -118,7 +118,7 @@ public class CartServiceImpl implements CartService {
         log.info(response.getData());
 
         log.info("Order created successfully. Clearing cart: {}", cart.getId());
-        cartItemRepository.deleteAll(items);
+        cartItemRepository.deleteByCartId(cart.getId());
 
         return CommonResponse.success(null, 200, "Cart Bought");
     }

@@ -80,6 +80,10 @@ public class OrderServiceImpl implements OrderService {
 
             log.info("Product Stock {}", product.stock);
             log.info("Product Sold {}", product.sold);
+
+            if(product.getStock() < item.getQuantity()){
+                throw new IllegalArgumentException("Quantity higher than stock");
+            }
             product.setStock(product.getStock() - item.getQuantity());
             product.setSold((product.getSold() == null ? item.getQuantity() : product.getSold()) + item.getQuantity());
 
