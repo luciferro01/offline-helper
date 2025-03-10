@@ -53,6 +53,26 @@ public class SellerServiceImpl implements SellerService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public SellerDto updateSeller(Long sellerId, SellerDto sellerDto) {
+        log.info("Updating seller with id: " + sellerId);
+        Seller seller = sellerRepository.findById(sellerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Seller not found with id: " + sellerId));
+
+        if (sellerDto.getTotalStock() != null) {
+            seller.setTotalStock(sellerDto.getTotalStock());
+        }
+        if (sellerDto.getTotalSold() != null) {
+            seller.setTotalSold(sellerDto.getTotalSold());
+        }
+        if (sellerDto.getRating() != null) {
+            seller.setRating(sellerDto.getRating());
+        }
+
+        seller = sellerRepository.save(seller);
+        return convertToDto(seller);
+    }
+
     SellerDto convertToDto(Seller seller) {
         SellerDto sellerDto = new SellerDto();
         BeanUtils.copyProperties(seller, sellerDto);
@@ -63,6 +83,13 @@ public class SellerServiceImpl implements SellerService {
     @Autowired
     private ProductOfferingRepository productOfferingRepository;
 
+    @Override
+    public ProductOfferingDto getProductOffering(Long productOfferingId) {
+        log.info("Getting product offering : " + productOfferingId);
+        ProductOffering productOffering = productOfferingRepository.findById(productOfferingId).orElseThrow(() -> new ResourceNotFoundException("Product Offering not found with id: " + productOfferingId));
+        return convertToDto(productOffering);
+    }
+    
     @Override
     public List<ProductOfferingDto> getProductOfferingsBySeller(Long sellerId) {
         log.info("Getting product offerings for seller id : " + sellerId);
@@ -90,6 +117,43 @@ public class SellerServiceImpl implements SellerService {
         }
         ProductOffering offering = convertToEntity(offeringDto);
         offering = productOfferingRepository.save(offering);
+
+        Seller seller = sellerRepository.findById(offeringDto.getSellerId())
+                .orElseThrow(() -> new ResourceNotFoundException("Seller not found with id: " + offeringDto.getSellerId()));
+        seller.setTotalStock(seller.getTotalStock() + offering.getStock());
+        seller.setTotalSold(seller.getTotalSold() + offering.getSold());
+        sellerRepository.save(seller);
+
+        return convertToDto(offering);
+    }
+
+    @Override
+    public ProductOfferingDto updateProductOffering(Long productOfferingId, ProductOfferingDto offeringDto) {
+        log.info("Updating product offering with id: " + productOfferingId);
+        ProductOffering offering = productOfferingRepository.findById(productOfferingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product offering not found with id: " + productOfferingId));
+
+        int oldStock = offering.getStock();
+        int oldSold = offering.getSold();
+
+        if (offeringDto.getPrice() != null) {
+            offering.setPrice(offeringDto.getPrice());
+        }
+        if (offeringDto.getStock() != null) {
+            offering.setStock(offeringDto.getStock());
+        }
+        if (offeringDto.getSold() != null) {
+            offering.setSold(offeringDto.getSold());
+        }
+
+        offering = productOfferingRepository.save(offering);
+
+        Seller seller = sellerRepository.findById(offering.getSellerId())
+                .orElseThrow(() -> new ResourceNotFoundException("Seller not found with id: " + offeringDto.getSellerId()));
+        seller.setTotalStock(seller.getTotalStock() - oldStock + offering.getStock());
+        seller.setTotalSold(seller.getTotalSold() - oldSold + offering.getSold());
+        sellerRepository.save(seller);
+
         return convertToDto(offering);
     }
 
@@ -98,8 +162,11 @@ public class SellerServiceImpl implements SellerService {
                 offering.getId(),
                 offering.getSellerId(),
                 offering.getProductId(),
+                offering.getSellerName(),
+                offering.getProductName(),
                 offering.getPrice(),
-                offering.getStock()
+                offering.getStock(),
+                offering.getSold()
         );
     }
 
@@ -108,8 +175,11 @@ public class SellerServiceImpl implements SellerService {
                 dto.getId(),
                 dto.getSellerId(),
                 dto.getProductId(),
+                dto.getSellerName(),
+                dto.getProductName(),
                 dto.getPrice(),
                 dto.getStock(),
+                dto.getSold(),
                 null
         );
     }

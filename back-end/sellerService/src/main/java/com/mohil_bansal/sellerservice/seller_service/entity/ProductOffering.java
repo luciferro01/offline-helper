@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-//@Table(name = "product_offerings")
 public class ProductOffering {
 
     @Id
@@ -25,11 +24,20 @@ public class ProductOffering {
     @Column(name = "product_id", nullable = false)
     private Long productId;
 
+    @Column(name = "seller_name", nullable = false)
+    private String sellerName;
+
+    @Column(name = "product_name", nullable = false)
+    private String productName;
+
     @Column(name = "price")
     private Double price;
 
     @Column(name = "stock")
     private Integer stock;
+
+    @Column(name = "sold")
+    private Integer sold;
 
     @Column(name = "created_at")
     private Timestamp createdAt;

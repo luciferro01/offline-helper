@@ -42,6 +42,24 @@ public class SellerController {
                 return ResponseEntity.ok(response);
         }
 
+    // Update a Seller
+    @PutMapping("/{sellerId}")
+    public ResponseEntity<CommonResponse<SellerDto>> updateSeller(
+            @PathVariable Long sellerId,
+            @RequestBody SellerDto sellerDto) {
+        SellerDto seller = sellerService.updateSeller(sellerId, sellerDto);
+        CommonResponse<SellerDto> response = CommonResponse.success(seller, 200, "Seller updated successfully");
+        return ResponseEntity.ok(response);
+    }
+
+    // Get product offerings by id
+    @GetMapping("/{productOfferingId}")
+    public ResponseEntity<CommonResponse<ProductOfferingDto>> getProductOffering(@PathVariable Long productOfferingId) {
+        ProductOfferingDto offering = sellerService.getProductOffering(productOfferingId);
+        CommonResponse<ProductOfferingDto> response = CommonResponse.success(offering, 200, "Product offering fetched successfully");
+        return ResponseEntity.ok(response);
+    }
+    
     // Get product offerings by seller
     @GetMapping("/{sellerId}/offerings")
     public ResponseEntity<CommonResponse<List<ProductOfferingDto>>> getProductOfferings(@PathVariable Long sellerId) {
@@ -56,6 +74,16 @@ public class SellerController {
         offeringDto.setSellerId(sellerId);
         ProductOfferingDto addedOffering = sellerService.addProductOffering(offeringDto);
         CommonResponse<ProductOfferingDto> response = CommonResponse.success(addedOffering, 200, "Product offering added successfully");
+        return ResponseEntity.ok(response);
+    }
+
+    // Update a Product Offering
+    @PutMapping("/{productOfferingId}")
+    public ResponseEntity<CommonResponse<ProductOfferingDto>> updateProductOffering(
+            @PathVariable Long productOfferingId,
+            @RequestBody ProductOfferingDto updatedOffering) {
+        ProductOfferingDto offering = sellerService.updateProductOffering(productOfferingId, updatedOffering);
+        CommonResponse<ProductOfferingDto> response = CommonResponse.success(offering, 200, "Product offering updated successfully");
         return ResponseEntity.ok(response);
     }
 }
