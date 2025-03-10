@@ -18,5 +18,6 @@ public class ProductOfferingDto {
     private String productName;
     private Double price;
     private Integer stock;
-    private Integer sold;
+    private Integer sold = 0;
+    private Integer rating = null;
 }

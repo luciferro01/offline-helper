@@ -37,7 +37,10 @@ public class ProductOffering {
     private Integer stock;
 
     @Column(name = "sold")
-    private Integer sold;
+    private Integer sold = 0;
+
+    @Column(name = "rating")
+    private Integer rating = null;
 
     @Column(name = "created_at")
     private Timestamp createdAt;

@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +24,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-public class CartServiceImpl implements CartService{
+public class CartServiceImpl implements CartService {
     @Autowired
     private CartRepository cartRepository;
 
@@ -92,7 +93,7 @@ public class CartServiceImpl implements CartService{
         return CommonResponse.success(null, 200, "Cart cleared");
     }
 
-    public CommonResponse<String> checkoutCart(Long userId){
+    public CommonResponse<String> checkoutCart(Long userId) {
         log.info("Checking cart for user id: {}", userId);
         Cart cart = cartRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart not found for user id: " + userId));
@@ -109,8 +110,9 @@ public class CartServiceImpl implements CartService{
         CommonResponse<String> response = restTemplate.exchange(
                 ADD_ORDER_SERVICE_URL + userId,
                 HttpMethod.POST,
-                null,
-                new ParameterizedTypeReference<CommonResponse<String>>() {}
+                new HttpEntity<>(cart),
+                new ParameterizedTypeReference<CommonResponse<String>>() {
+                }
         ).getBody();
 
         log.info(response.getData());

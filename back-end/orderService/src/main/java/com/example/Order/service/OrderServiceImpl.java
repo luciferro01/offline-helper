@@ -38,17 +38,17 @@ public class OrderServiceImpl implements OrderService {
     private static final String CART_SERVICE_URL = "http://localhost:8082/carts/";
     private static final String PRODUCT_OFFERING_SERVICE_URL = "http://localhost:8081/seller/";
 
-    public CommonResponse<String> addOrder(Long userId) {
-        log.info("Creating order from user Id: {}", userId);
+    public CommonResponse<String> addOrder(Long userId, Cart cart) {
+        log.info("Creating order from user Id: {}", cart.getUserId());
 
-        CommonResponse<Cart> response = restTemplate.exchange(
-                CART_SERVICE_URL + userId,
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<CommonResponse<Cart>>() {}
-        ).getBody();
+//        CommonResponse<Cart> response = restTemplate.exchange(
+//                CART_SERVICE_URL + userId,
+//                HttpMethod.GET,
+//                null,
+//                new ParameterizedTypeReference<CommonResponse<Cart>>() {}
+//        ).getBody();
 
-        Cart cart = response.getData();
+//        Cart cart = response.getData();
         log.info("Fetched cart: {}", cart);
 
         if (cart == null || cart.getItems().isEmpty()) {
@@ -84,7 +84,7 @@ public class OrderServiceImpl implements OrderService {
             product.setSold((product.getSold() == null ? item.getQuantity() : product.getSold()) + item.getQuantity());
 
             CommonResponse<ProductOffering> updateResponse = restTemplate.exchange(
-                    PRODUCT_OFFERING_SERVICE_URL + item.getProductOfferingId(),
+                    PRODUCT_OFFERING_SERVICE_URL + "/offering/" + item.getProductOfferingId(),
                     HttpMethod.PUT,
                     new HttpEntity<>(product),
                     new ParameterizedTypeReference<CommonResponse<ProductOffering>>() {}
@@ -124,7 +124,7 @@ public class OrderServiceImpl implements OrderService {
         return CommonResponse.success(orderDtos, 200, "Order history fetched successfully");
     }
 
-    static class Cart {
+    public static class Cart {
         private Long id;
         private Long userId;
         private List<CartItem> items;
@@ -188,9 +188,12 @@ public class OrderServiceImpl implements OrderService {
         private Long id;
         private Long sellerId;
         private Long productId;
+        private String sellerName;
+        private String productName;
         private Double price;
         private Integer stock;
-        private Integer sold;
+        private Integer sold = 0;
+        private Integer rating = null;
 
         public Long getId() {
             return id;
@@ -216,6 +219,22 @@ public class OrderServiceImpl implements OrderService {
             this.productId = productId;
         }
 
+        public String getSellerName() {
+            return sellerName;
+        }
+
+        public void setSellerName(String sellerName) {
+            this.sellerName = sellerName;
+        }
+
+        public String getProductName() {
+            return productName;
+        }
+
+        public void setProductName(String productName) {
+            this.productName = productName;
+        }
+
         public Double getPrice() {
             return price;
         }
@@ -238,6 +257,14 @@ public class OrderServiceImpl implements OrderService {
 
         public void setSold(Integer sold) {
             this.sold = sold;
+        }
+
+        public Integer getRating() {
+            return rating;
+        }
+
+        public void setRating(Integer rating) {
+            this.rating = rating;
         }
     }
 }

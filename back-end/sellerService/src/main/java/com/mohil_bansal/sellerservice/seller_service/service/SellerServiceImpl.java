@@ -145,13 +145,17 @@ public class SellerServiceImpl implements SellerService {
         if (offeringDto.getSold() != null) {
             offering.setSold(offeringDto.getSold());
         }
+        if (offeringDto.getRating() != null) {
+            offering.setRating(offeringDto.getRating());
+        }
 
         offering = productOfferingRepository.save(offering);
 
         Seller seller = sellerRepository.findById(offering.getSellerId())
                 .orElseThrow(() -> new ResourceNotFoundException("Seller not found with id: " + offeringDto.getSellerId()));
-        seller.setTotalStock(seller.getTotalStock() - oldStock + offering.getStock());
-        seller.setTotalSold(seller.getTotalSold() - oldSold + offering.getSold());
+        seller.setTotalStock(seller.getTotalStock() - (oldStock + offering.getStock()));
+        seller.setTotalSold(seller.getTotalSold() - (oldSold + offering.getSold()));
+//        seller.setRating(seller.g);
         sellerRepository.save(seller);
 
         return convertToDto(offering);
@@ -166,7 +170,8 @@ public class SellerServiceImpl implements SellerService {
                 offering.getProductName(),
                 offering.getPrice(),
                 offering.getStock(),
-                offering.getSold()
+                offering.getSold(),
+                offering.getRating()
         );
     }
 
@@ -180,6 +185,7 @@ public class SellerServiceImpl implements SellerService {
                 dto.getPrice(),
                 dto.getStock(),
                 dto.getSold(),
+                dto.getRating(),
                 null
         );
     }

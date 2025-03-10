@@ -6,6 +6,6 @@ import com.example.Order.dto.OrderDto;
 import java.util.List;
 
 public interface OrderService {
-    CommonResponse<String> addOrder(Long cartId);
+    CommonResponse<String> addOrder(Long userId, OrderServiceImpl.Cart cart);
     CommonResponse<List<OrderDto>> getOrderHistory(Long userId);
 }

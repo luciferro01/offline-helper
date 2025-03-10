@@ -78,7 +78,7 @@ public class SellerController {
     }
 
     // Update a Product Offering
-    @PutMapping("/{productOfferingId}")
+    @PutMapping("/offering/{productOfferingId}")
     public ResponseEntity<CommonResponse<ProductOfferingDto>> updateProductOffering(
             @PathVariable Long productOfferingId,
             @RequestBody ProductOfferingDto updatedOffering) {
