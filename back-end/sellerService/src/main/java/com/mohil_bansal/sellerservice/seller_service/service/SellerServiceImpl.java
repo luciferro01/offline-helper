@@ -117,41 +117,6 @@ public class SellerServiceImpl implements SellerService {
     }
 
     @Override
-    public ProductOfferingDto addProductOffering(ProductOfferingDto offeringDto) {
-        log.info("Adding product offering for seller id: " + offeringDto.getSellerId());
-        if (!sellerRepository.existsById(offeringDto.getSellerId())) {
-            log.error("Seller not found with id: " + offeringDto.getSellerId());
-            throw new ResourceNotFoundException("Seller not found with id: " + offeringDto.getSellerId());
-        }
-        if (productOfferingRepository.existsBySellerIdAndProductId(offeringDto.getSellerId(),
-                offeringDto.getProductId())) {
-            log.error("Product offering already exists for seller id: " + offeringDto.getSellerId()
-                    + " and product id: " + offeringDto.getProductId());
-            throw new DataAlreadyExistsException("Product offering already exists for this seller and product");
-        }
-        ProductOffering offering = convertToEntity(offeringDto);
-        offering = productOfferingRepository.save(offering);
-
-        // SearchProductOfferingDto searchProductOfferingDto = new
-        // SearchProductOfferingDto();
-        // searchProductOfferingDto.getProductOfferingId() = offering.getId();
-
-        // Publish Kafka Event for Product Offering Creation
-        // ProductOfferingDto savedOfferingDto = convertToDto(offering);
-        ProductOfferingUpdateEvent createEvent = new ProductOfferingUpdateEvent("CREATE", offeringDto);
-        kafkaTemplate.send("product-updates", String.valueOf(offeringDto.getId()), createEvent);
-
-        Seller seller = sellerRepository.findById(offeringDto.getSellerId())
-                .orElseThrow(
-                        () -> new ResourceNotFoundException("Seller not found with id: " + offeringDto.getSellerId()));
-        seller.setTotalStock(seller.getTotalStock() + offering.getStock());
-        seller.setTotalSold(seller.getTotalSold() + offering.getSold());
-        sellerRepository.save(seller);
-
-        return convertToDto(offering);
-    }
-
-    @Override
     public ProductOfferingDto updateProductOffering(Long productOfferingId, ProductOfferingDto offeringDto) {
         log.info("Updating product offering with id: " + productOfferingId);
         ProductOffering offering = productOfferingRepository.findById(productOfferingId)
@@ -210,7 +175,7 @@ public class SellerServiceImpl implements SellerService {
         String productImageUrl = null;
 
         try {
-            com.mohil_bansal.sellerservice.seller_service.dto.ProductDto productDetails = productServiceClient
+            ProductDto productDetails = productServiceClient
                     .getProductById(offeringDto.getProductId()).getData();
             System.out.println("ProductDto received from ProductServiceClient: " + productDetails);
 
