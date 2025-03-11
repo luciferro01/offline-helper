@@ -141,10 +141,6 @@ public class SellerServiceImpl implements SellerService {
 
         offering = productOfferingRepository.save(offering);
 
-        // Publish Kafka Event for Product Offering Update
-        ProductOfferingDto updatedOfferingDto = convertToDto(offering);
-        ProductOfferingUpdateEvent updateEvent = new ProductOfferingUpdateEvent("UPDATE", updatedOfferingDto);
-        kafkaTemplate.send("product-updates", String.valueOf(updatedOfferingDto.getId()), updateEvent);
 
         Seller seller = sellerRepository.findById(offering.getSellerId())
                 .orElseThrow(
@@ -159,11 +155,40 @@ public class SellerServiceImpl implements SellerService {
         seller.setTotalSold(seller.getTotalSold() - oldSold + offering.getSold());
         sellerRepository.save(seller);
 
+
+        // Search Product Offering Update
+
+        ProductDto productDetails = productServiceClient
+                .getProductById(offeringDto.getProductId()).getData();
+
+        int totalProductsOffered = getProductOfferingsBySeller(seller.getId()).size();
+
+        SearchProductOfferingDto searchProductOfferingDto = new SearchProductOfferingDto();
+
+        searchProductOfferingDto.setProductOfferingId(String.valueOf(offering.getId()));
+        searchProductOfferingDto.setProductId(productDetails.getId());
+        searchProductOfferingDto.setProductName(productDetails.getName());
+        searchProductOfferingDto.setSellerId(offering.getSellerId());
+        searchProductOfferingDto.setSellerName(offering.getSellerName());
+        searchProductOfferingDto.setPrice(offering.getPrice());
+        searchProductOfferingDto.setStock(offering.getStock());
+        searchProductOfferingDto.setSellerRating(seller.getRating());
+        searchProductOfferingDto.setTotalProductsOffered(totalProductsOffered);
+        searchProductOfferingDto.setProductsSoldCount(seller.getTotalSold());
+        searchProductOfferingDto.setProductReviews(0);
+        searchProductOfferingDto.setCategory("Electronics");
+        String id = offering.getId() + "-" + offering.getProductId();
+        searchProductOfferingDto.setId(id);
+
+
+        // Publish Kafka Event for Product Offering Update
+        ProductOfferingUpdateEvent updateEvent = new ProductOfferingUpdateEvent("UPDATE", searchProductOfferingDto);
+        kafkaTemplate.send("product-updates", String.valueOf(searchProductOfferingDto.getId()), updateEvent);
+
+        ProductOfferingDto updatedOfferingDto = convertToDto(offering);
         return convertToDto(offering);
     }
 
-    // @Autowired
-    // ProductDto productDetails;
     @Override
     public ProductOfferingDto addProductOffering(ProductOfferingDto offeringDto) {
         log.info("Adding product offering for seller id: " + offeringDto.getSellerId());
@@ -205,14 +230,41 @@ public class SellerServiceImpl implements SellerService {
         log.info("Values before convertToEntity: offeringDto={}, productName={}, productImageUrl={}, sellerName={}",
                 offeringDto, productName, productImageUrl, sellerName); // LOGGING
         ProductOffering offering = convertToEntity(offeringDto, sellerName, productName, productImageUrl); // Pass
-                                                                                                           // sellerName
-        offering = productOfferingRepository.save(offering);
-        ProductOfferingUpdateEvent createEvent = new ProductOfferingUpdateEvent("CREATE", offeringDto);
-        kafkaTemplate.send("product-updates", String.valueOf(offeringDto.getId()), createEvent);
 
+
+
+        offering = productOfferingRepository.save(offering);
         seller.setTotalStock(seller.getTotalStock() + offering.getStock());
         seller.setTotalSold(seller.getTotalSold() + offering.getSold());
         sellerRepository.save(seller);
+                                                                                                           // sellerName
+        // Search Product Offering Kafka
+        ProductDto productDetails = productServiceClient
+                .getProductById(offeringDto.getProductId()).getData();
+
+        int totalProductsOffered = getProductOfferingsBySeller(seller.getId()).size();
+
+        SearchProductOfferingDto searchProductOfferingDto = new SearchProductOfferingDto();
+
+        searchProductOfferingDto.setProductOfferingId(String.valueOf(offering.getId()));
+        searchProductOfferingDto.setProductId(productDetails.getId());
+        searchProductOfferingDto.setProductName(productDetails.getName());
+        searchProductOfferingDto.setSellerId(offering.getSellerId());
+        searchProductOfferingDto.setSellerName(offering.getSellerName());
+        searchProductOfferingDto.setPrice(offering.getPrice());
+        searchProductOfferingDto.setStock(offering.getStock());
+        searchProductOfferingDto.setSellerRating(seller.getRating());
+        searchProductOfferingDto.setTotalProductsOffered(totalProductsOffered);
+        searchProductOfferingDto.setProductsSoldCount(seller.getTotalSold());
+        searchProductOfferingDto.setProductReviews(0);
+        searchProductOfferingDto.setCategory("Electronics");
+        String id = offering.getId() + "-" + offering.getProductId();
+        searchProductOfferingDto.setId(id);
+
+        ProductOfferingUpdateEvent createEvent = new ProductOfferingUpdateEvent("CREATE", searchProductOfferingDto);
+        kafkaTemplate.send("product-updates", String.valueOf(searchProductOfferingDto.getId()), createEvent);
+
+
 
         return convertToDto(offering);
     }
