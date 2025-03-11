@@ -159,7 +159,7 @@ public class SellerServiceImpl implements SellerService {
         // Search Product Offering Update
 
         ProductDto productDetails = productServiceClient
-                .getProductById(offeringDto.getProductId()).getData();
+                .getProductById(offering.getProductId()).getData();
 
         int totalProductsOffered = getProductOfferingsBySeller(seller.getId()).size();
 
