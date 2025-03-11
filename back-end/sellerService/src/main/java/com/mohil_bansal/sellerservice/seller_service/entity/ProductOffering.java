@@ -1,14 +1,9 @@
 package com.mohil_bansal.sellerservice.seller_service.entity;
 
 import javax.persistence.*;
-
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
-import io.hypersistence.utils.hibernate.type.json.JsonBinaryType; // Import JsonBinaryType
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -17,7 +12,6 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-//@TypeDef(name = "jsonb-node", typeClass = JsonBinaryType.class) // Define jsonb-node type
 public class ProductOffering {
 
     @Id
@@ -50,12 +44,6 @@ public class ProductOffering {
 
     @Column(name = "created_at")
     private Timestamp createdAt;
-
-//    @Column(name = "images", columnDefinition = "jsonb")
-//    @Type(type = "jsonb-node") // Use @Type, NO @Convert here in Seller_service as well
-//    private JsonNode images;
-    @Column(name = "product_image_url")
-    private String productImageUrl;
 
     @PrePersist
     protected void onCreate() {

@@ -4,9 +4,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.Column;
+
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 public class ProductOfferingDto {
 
     private Long id;
@@ -18,5 +20,4 @@ public class ProductOfferingDto {
     private Integer stock;
     private Integer sold = 0;
     private Integer rating = null;
-    private String productImageUrl; // Replaced JsonNode images with String productImageUrl
 }

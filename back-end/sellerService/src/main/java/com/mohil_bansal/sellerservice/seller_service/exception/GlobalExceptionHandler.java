@@ -29,7 +29,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<CommonResponse> handleGeneralException(Exception ex) {
         log.error("An error occurred: {}", ex.getMessage());
-        ex.printStackTrace();
         CommonResponse response = CommonResponse.failure("Server Error", HttpStatus.INTERNAL_SERVER_ERROR.value());
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
