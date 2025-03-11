@@ -138,12 +138,12 @@ export default {
       this.logout()
       this.$router.push('/signin')
     },
-  },
 
-  handleSearch() {
-    if (this.searchQuery.trim()) {
-      this.$router.push({ name: 'PLP', query: { q: this.searchQuery } })
-    }
+    handleSearch() {
+      if (this.searchQuery.trim()) {
+        this.$router.push({ name: 'PLP', query: { q: this.searchQuery } })
+      }
+    },
   },
 
   watch: {
@@ -169,13 +169,12 @@ export default {
   padding: 0.5rem 1rem;
   height: 60px;
   align-items: center;
+  position: relative; /* Make it a positioning context */
 }
 
 .navbar-content {
   display: flex;
   flex: 1;
-  justify-content: space-between;
-  align-items: center;
 }
 
 .logo {
@@ -199,10 +198,13 @@ export default {
 }
 
 .search-container {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
-  flex: 1;
-  max-width: 700px;
-  margin: 0 1rem;
+  width: 500px; /* Fixed width */
+  z-index: 1;
 }
 
 .search-input {
@@ -228,6 +230,7 @@ export default {
 .navbar-right {
   display: flex;
   align-items: center;
+  margin-left: auto;
 }
 
 .nav-item {
@@ -296,17 +299,6 @@ export default {
 }
 
 .signout-button {
-  color: white;
-  background-color: #2789f2;
-  border: 1px solid lightblue;
-  border-radius: 3px;
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-  cursor: pointer;
-  width: 100%;
-}
-
-.signin-button {
   color: white;
   background-color: #2789f2;
   border: 1px solid lightblue;
