@@ -6,6 +6,7 @@ import com.mohil_bansal.sellerservice.seller_service.dto.ProductOfferingDto;
 import com.mohil_bansal.sellerservice.seller_service.dto.SellerDto;
 import com.mohil_bansal.sellerservice.seller_service.entity.ProductOffering;
 import com.mohil_bansal.sellerservice.seller_service.entity.Seller;
+import com.mohil_bansal.sellerservice.seller_service.event.ProductOfferingUpdateEvent;
 import com.mohil_bansal.sellerservice.seller_service.exception.DataAlreadyExistsException;
 import com.mohil_bansal.sellerservice.seller_service.exception.ResourceNotFoundException;
 import com.mohil_bansal.sellerservice.seller_service.repository.ProductOfferingRepository;
@@ -13,6 +14,7 @@ import com.mohil_bansal.sellerservice.seller_service.repository.SellerRepository
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,6 +32,9 @@ public class SellerServiceImpl implements SellerService {
 
     @Autowired
     private ProductServiceClient productServiceClient;
+
+    @Autowired
+    private KafkaTemplate<String, ProductOfferingUpdateEvent> kafkaTemplate;
 
 
     @Override
@@ -110,21 +115,49 @@ public class SellerServiceImpl implements SellerService {
     }
 
     @Override
-    public ProductOfferingDto updateProductOffering(Long productOfferingId, ProductOfferingDto offeringDto) { // <-- Implemented method
+    public ProductOfferingDto updateProductOffering(Long productOfferingId, ProductOfferingDto offeringDto) {
         log.info("Updating product offering with id: " + productOfferingId);
         ProductOffering offering = productOfferingRepository.findById(productOfferingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product offering not found with id: " + productOfferingId));
 
-        // Update fields based on DTO (similar to updateProduct in ProductService)
+        int oldStock = offering.getStock();
+        int oldSold = offering.getSold();
+
         if (offeringDto.getPrice() != null) {
             offering.setPrice(offeringDto.getPrice());
         }
         if (offeringDto.getStock() != null) {
             offering.setStock(offeringDto.getStock());
         }
-        // if needed add logic to update other fields like sold,rating,productName,sellerName,images
+        if (offeringDto.getSold() != null) {
+            offering.setSold(offeringDto.getSold());
+        }
+        if (offeringDto.getRating() != null) {
+            offering.setRating(offeringDto.getRating());
+        }
 
         offering = productOfferingRepository.save(offering);
+
+
+
+        // Publish Kafka Event for Product Offering Update
+        ProductOfferingDto updatedOfferingDto = convertToDto(offering);
+        ProductOfferingUpdateEvent updateEvent = new ProductOfferingUpdateEvent("UPDATE", updatedOfferingDto);
+        kafkaTemplate.send("product-updates", String.valueOf(updatedOfferingDto.getId()), updateEvent);
+
+
+
+        Seller seller = sellerRepository.findById(offering.getSellerId())
+                .orElseThrow(() -> new ResourceNotFoundException("Seller not found with id: " + offeringDto.getSellerId()));
+        if (seller.getTotalSold() > 0 && offering.getSold() > 0) {
+            int totalUnitsSold = seller.getTotalSold() + offering.getSold();
+            double weightedRating = ((seller.getRating() * seller.getTotalSold()) + (offering.getRating() * offering.getSold())) / totalUnitsSold;
+            seller.setRating(weightedRating);
+        }
+        seller.setTotalStock(seller.getTotalStock() - oldStock + offering.getStock());
+        seller.setTotalSold(seller.getTotalSold() - oldSold + offering.getSold());
+        sellerRepository.save(seller);
+
         return convertToDto(offering);
     }
 
@@ -166,6 +199,8 @@ public ProductOfferingDto addProductOffering(ProductOfferingDto offeringDto) {
             offeringDto, productName, productImageUrl, sellerName); //LOGGING
     ProductOffering offering = convertToEntity(offeringDto,sellerName,productName,productImageUrl); // Pass sellerName
     offering = productOfferingRepository.save(offering);
+    ProductOfferingUpdateEvent createEvent = new ProductOfferingUpdateEvent("CREATE", offeringDto);
+    kafkaTemplate.send("product-updates", String.valueOf(offeringDto.getId()), createEvent);
 
     seller.setTotalStock(seller.getTotalStock() + offering.getStock());
     seller.setTotalSold(seller.getTotalSold() + offering.getSold());
