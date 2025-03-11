@@ -27,6 +27,8 @@ public class ProductService {
     public ProductDto getProductById(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+        System.out.println("Product Name from Entity in ProductService: " + product.getName()); // ADDED LOGGING
+        System.out.println("Product Images from Entity in ProductService: " + product.getImagesUrl()); // ADDED LOGGING
         return convertToDto(product);
     }
 
@@ -46,8 +48,8 @@ public class ProductService {
         if (productDtoDetails.getDescription() != null) {
             productEntity.setDescription(productDtoDetails.getDescription());
         }
-        if (productDtoDetails.getImages() != null) {
-            productEntity.setImages(productDtoDetails.getImages());
+        if (productDtoDetails.getImagesUrl() != null) {
+            productEntity.setImagesUrl(productDtoDetails.getImagesUrl());
         }
         if (productDtoDetails.getCategoryId() != null) {
             productEntity.setCategoryId(productDtoDetails.getCategoryId());
@@ -63,13 +65,16 @@ public class ProductService {
     }
 
     private ProductDto convertToDto(Product product) {
-        return new ProductDto(
+        ProductDto productDto = new ProductDto(
                 product.getId(),
                 product.getCategoryId(),
                 product.getName(),
                 product.getDescription(),
-                product.getImages()
+                //product.getImages()
+                product.getImagesUrl()
         );
+        System.out.println("ProductDto being returned from ProductService: " + productDto); // ADDED LOGGING
+        return productDto;
     }
 
     private Product convertToEntity(ProductDto productDto) {
@@ -78,7 +83,8 @@ public class ProductService {
         product.setCategoryId(productDto.getCategoryId());
         product.setName(productDto.getName());
         product.setDescription(productDto.getDescription());
-        product.setImages(productDto.getImages());
+        //product.setImages(productDto.getImages());
+        product.setImagesUrl(productDto.getImagesUrl());
         return product;
     }
 
