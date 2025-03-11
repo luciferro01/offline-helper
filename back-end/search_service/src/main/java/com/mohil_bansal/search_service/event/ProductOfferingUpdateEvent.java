@@ -1,15 +1,15 @@
-package com.mohil_bansal.sellerservice.seller_service.event;
+package com.mohil_bansal.search_service.event;
 
-import com.mohil_bansal.sellerservice.seller_service.dto.SearchProductOfferingDto;
+import com.mohil_bansal.search_service.dto.ProductOfferingDto;
 
 public class ProductOfferingUpdateEvent {
     private String operationType; // "CREATE" or "UPDATE"
-    private SearchProductOfferingDto productOfferingDto;
+    private ProductOfferingDto productOfferingDto;
 
     public ProductOfferingUpdateEvent() {
     }
 
-    public ProductOfferingUpdateEvent(String operationType, SearchProductOfferingDto productOfferingDto) {
+    public ProductOfferingUpdateEvent(String operationType, ProductOfferingDto productOfferingDto) {
         this.operationType = operationType;
         this.productOfferingDto = productOfferingDto;
     }
@@ -23,11 +23,11 @@ public class ProductOfferingUpdateEvent {
         this.operationType = operationType;
     }
 
-    public SearchProductOfferingDto getProductOfferingDto() {
+    public ProductOfferingDto getProductOfferingDto() {
         return productOfferingDto;
     }
 
-    public void setProductOfferingDto(SearchProductOfferingDto productOfferingDto) {
+    public void setProductOfferingDto(ProductOfferingDto productOfferingDto) {
         this.productOfferingDto = productOfferingDto;
     }
 }
