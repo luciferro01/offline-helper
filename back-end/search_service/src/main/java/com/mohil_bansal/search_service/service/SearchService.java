@@ -18,5 +18,9 @@ public interface SearchService {
 
     ProductOfferingDto create(ProductOfferingDto productOfferingDto);
 
+    ProductOfferingDto update(ProductOfferingDto productOfferingDto);
+
+    void consumeProductOfferingUpdateEvent(String event);
+
     void deleteAll();
 }
