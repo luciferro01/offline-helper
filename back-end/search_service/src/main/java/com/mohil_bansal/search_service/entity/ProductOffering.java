@@ -5,20 +5,21 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.solr.core.mapping.Indexed;
 import org.springframework.data.solr.core.mapping.SolrDocument;
 
-@SolrDocument(collection = "product_offerings")
+@SolrDocument(collection = "product_offerings_v1")
 public class ProductOffering {
 
     @Id
     @Field
-    @Indexed(type = "long")
-    private Long productOfferingId;  // Unique ID for this product offering
+    private String id;
+
+    @Field("productOfferingId")
+    private String productOfferingId;  // Unique ID for this product offering
 
     @Field
-    @Indexed(type = "long")
     private Long productId;  // Reference to the product ID
 
     @Field
-    @Indexed(name = "productName", type = "string")
+    @Indexed()
     private String productName;  // Product name
 
     @Field
@@ -26,40 +27,48 @@ public class ProductOffering {
     private Long sellerId;
 
     @Field
-    @Indexed(name = "sellerName", type = "string")
+    @Indexed()
     private String sellerName;  // Seller name (e.g., "EasyBuy")
 
     @Field
-    @Indexed(type = "double")
+    @Indexed()
     private double price;  // Price from the seller
 
     @Field
-    @Indexed(type = "int")
+    @Indexed()
     private int stock;  // Available stock from the seller
 
     @Field
-    @Indexed(type = "double")
+    @Indexed()
     private double sellerRating;  // Seller's rating (out of 5)
 
     @Field
-    @Indexed(type = "int")
+    @Indexed()
     private int productsSoldCount;  // Number of products sold by the seller
 
     @Field
-    @Indexed(type = "int")
+    @Indexed()
     private int totalProductsOffered;  // Total number of different products offered by the seller
 
     @Field
-    @Indexed(type = "int")
+    @Indexed()
     private int productReviews;  // Number of customer reviews for the product
 
     @Field
-    @Indexed(name = "category", type = "string")
+    @Indexed()
     private String category;  // Category of the product (e.g., "Smartphones")
 
     @Field
-    @Indexed(type = "double")
+    @Indexed()
     private double sellerRank;  // Rank of the seller
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public double getSellerRank() {
         return sellerRank;
@@ -69,11 +78,11 @@ public class ProductOffering {
         this.sellerRank = sellerRank;
     }
 
-    public Long getProductOfferingId() {
+    public String getProductOfferingId() {
         return productOfferingId;
     }
 
-    public void setProductOfferingId(Long productOfferingId) {
+    public void setProductOfferingId(String productOfferingId) {
         this.productOfferingId = productOfferingId;
     }
 

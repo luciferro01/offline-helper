@@ -1,7 +1,7 @@
 package com.mohil_bansal.search_service.dto;
 
 public class ProductOfferingDto {
-    private Long productOfferingId;  // Unique ID for this product offering
+    private String productOfferingId;  // Unique ID for this product offering
     private Long productId;  // Reference to the product ID
     private String productName;  // Product name
     private Long sellerId;
@@ -15,11 +15,11 @@ public class ProductOfferingDto {
     private String category;  // Category of the product (e.g., "Smartphones")
 
     // Getters and Setters
-    public Long getProductOfferingId() {
+    public String getProductOfferingId() {
         return productOfferingId;
     }
 
-    public void setProductOfferingId(Long productOfferingId) {
+    public void setProductOfferingId(String productOfferingId) {
         this.productOfferingId = productOfferingId;
     }
 

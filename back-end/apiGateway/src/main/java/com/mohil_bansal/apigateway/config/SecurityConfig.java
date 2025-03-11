@@ -41,6 +41,7 @@ public class SecurityConfig {
                 .build();
     }
 
+
     @Bean
     public ReactiveJwtDecoder jwtDecoder() {
         String secret = "mohilBansalIsAwesome";

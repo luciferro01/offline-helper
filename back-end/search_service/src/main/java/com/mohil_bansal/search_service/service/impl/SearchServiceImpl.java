@@ -35,7 +35,7 @@ public class SearchServiceImpl implements SearchService {
     public PageImpl<ProductOffering> findByProductNameContaining(String keyword, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("sellerRank").descending());
         List<ProductOffering> productOfferingsList = new ArrayList();
-        Page<ProductOffering> productOfferingsPage =  productOfferingRepository.findByProductNameContaining(keyword, pageable);
+        Page<ProductOffering> productOfferingsPage =  productOfferingRepository.findByProductName(keyword, pageable);
 
         productOfferingsPage.forEach(productOfferingsList::add);
         return new PageImpl<>(productOfferingsList, pageable, productOfferingsPage.getTotalElements());
@@ -46,6 +46,8 @@ public class SearchServiceImpl implements SearchService {
     public ProductOfferingDto create(ProductOfferingDto productOfferingDto) {
         ProductOffering productOffering = new ProductOffering();
         BeanUtils.copyProperties(productOfferingDto, productOffering);
+        String id = productOffering.getProductOfferingId() + "-" + productOffering.getProductId();
+        productOffering.setId(id);
         productOfferingRepository.save(productOffering);
         rankCalculatorService.recalculateAllSellerRanks();
         return productOfferingDto;

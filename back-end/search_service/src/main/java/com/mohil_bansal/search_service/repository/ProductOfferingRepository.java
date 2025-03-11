@@ -16,8 +16,9 @@ public interface ProductOfferingRepository extends SolrCrudRepository<ProductOff
     List<ProductOffering> findByProductName(String productName);
 
     //Trying with pageable
-    @Query("productName:*?0* OR productName:?0*")
-    Page<ProductOffering> findByProductNameContaining(String productName, Pageable pageable);
+//    @Query("productName:*?0* OR productName:?0*")
+    @Query("productName:*?0*")
+    Page<ProductOffering> findByProductName(String productName, Pageable pageable);
 
 
     @Query("productName:*?0* OR sellerName:*?0* OR category:*?0*")
