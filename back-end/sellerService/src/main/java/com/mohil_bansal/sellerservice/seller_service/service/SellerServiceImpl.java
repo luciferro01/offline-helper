@@ -1,6 +1,7 @@
 package com.mohil_bansal.sellerservice.seller_service.service;
 
 import com.mohil_bansal.sellerservice.seller_service.dto.ProductOfferingDto;
+import com.mohil_bansal.sellerservice.seller_service.dto.SearchProductOfferingDto;
 import com.mohil_bansal.sellerservice.seller_service.dto.SellerDto;
 import com.mohil_bansal.sellerservice.seller_service.entity.ProductOffering;
 import com.mohil_bansal.sellerservice.seller_service.entity.Seller;
@@ -122,6 +123,8 @@ public class SellerServiceImpl implements SellerService {
         ProductOffering offering = convertToEntity(offeringDto);
         offering = productOfferingRepository.save(offering);
 
+//        SearchProductOfferingDto searchProductOfferingDto = new SearchProductOfferingDto();
+//        searchProductOfferingDto.getProductOfferingId() = offering.getId();
 
 
         // Publish Kafka Event for Product Offering Creation
