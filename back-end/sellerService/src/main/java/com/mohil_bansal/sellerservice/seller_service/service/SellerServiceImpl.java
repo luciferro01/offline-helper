@@ -4,6 +4,7 @@ import com.mohil_bansal.sellerservice.seller_service.dto.ProductOfferingDto;
 import com.mohil_bansal.sellerservice.seller_service.dto.SellerDto;
 import com.mohil_bansal.sellerservice.seller_service.entity.ProductOffering;
 import com.mohil_bansal.sellerservice.seller_service.entity.Seller;
+import com.mohil_bansal.sellerservice.seller_service.event.ProductOfferingUpdateEvent;
 import com.mohil_bansal.sellerservice.seller_service.exception.DataAlreadyExistsException;
 import com.mohil_bansal.sellerservice.seller_service.exception.ResourceNotFoundException;
 import com.mohil_bansal.sellerservice.seller_service.repository.ProductOfferingRepository;
@@ -11,6 +12,7 @@ import com.mohil_bansal.sellerservice.seller_service.repository.SellerRepository
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,6 +25,8 @@ public class SellerServiceImpl implements SellerService {
     @Autowired
     private SellerRepository sellerRepository;
 
+    @Autowired
+    private KafkaTemplate<String, ProductOfferingUpdateEvent> kafkaTemplate;
 
     @Override
     public SellerDto addSeller(SellerDto sellerDto) {
@@ -118,6 +122,15 @@ public class SellerServiceImpl implements SellerService {
         ProductOffering offering = convertToEntity(offeringDto);
         offering = productOfferingRepository.save(offering);
 
+
+
+        // Publish Kafka Event for Product Offering Creation
+//        ProductOfferingDto savedOfferingDto = convertToDto(offering);
+        ProductOfferingUpdateEvent createEvent = new ProductOfferingUpdateEvent("CREATE", offeringDto);
+        kafkaTemplate.send("product-updates", String.valueOf(offeringDto.getId()), createEvent);
+
+
+
         Seller seller = sellerRepository.findById(offeringDto.getSellerId())
                 .orElseThrow(() -> new ResourceNotFoundException("Seller not found with id: " + offeringDto.getSellerId()));
         seller.setTotalStock(seller.getTotalStock() + offering.getStock());
@@ -151,11 +164,22 @@ public class SellerServiceImpl implements SellerService {
 
         offering = productOfferingRepository.save(offering);
 
+
+
+        // Publish Kafka Event for Product Offering Update
+        ProductOfferingDto updatedOfferingDto = convertToDto(offering);
+        ProductOfferingUpdateEvent updateEvent = new ProductOfferingUpdateEvent("UPDATE", updatedOfferingDto);
+        kafkaTemplate.send("product-updates", String.valueOf(updatedOfferingDto.getId()), updateEvent);
+
+
+
         Seller seller = sellerRepository.findById(offering.getSellerId())
                 .orElseThrow(() -> new ResourceNotFoundException("Seller not found with id: " + offeringDto.getSellerId()));
+        if(seller.getTotalSold() > 0){
+            seller.setRating( ( ( seller.getRating() * (seller.getTotalSold()) ) + offering.getRating() ) / (seller.getTotalSold() + 1) );
+        }
         seller.setTotalStock(seller.getTotalStock() - (oldStock + offering.getStock()));
         seller.setTotalSold(seller.getTotalSold() - (oldSold + offering.getSold()));
-//        seller.setRating(seller.g);
         sellerRepository.save(seller);
 
         return convertToDto(offering);
