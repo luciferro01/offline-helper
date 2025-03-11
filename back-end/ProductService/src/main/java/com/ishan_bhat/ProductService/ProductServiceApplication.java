@@ -7,8 +7,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 @SpringBootApplication
-@EnableJpaRepositories("com.ishan_bhat.ProductService.repository")
-@EnableSwagger2
+//@EnableJpaRepositories("com.ishan_bhat.ProductService.repository")
+//@EnableSwagger2
 @EnableEurekaClient
 public class ProductServiceApplication {
 

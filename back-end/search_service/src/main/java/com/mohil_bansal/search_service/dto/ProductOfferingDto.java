@@ -1,6 +1,7 @@
 package com.mohil_bansal.search_service.dto;
 
 public class ProductOfferingDto {
+    private String id;
     private String productOfferingId;  // Unique ID for this product offering
     private Long productId;  // Reference to the product ID
     private String productName;  // Product name
@@ -13,6 +14,14 @@ public class ProductOfferingDto {
     private int totalProductsOffered;  // Total number of different products offered by the seller
     private int productReviews;  // Number of customer reviews for the product
     private String category;  // Category of the product (e.g., "Smartphones")
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     // Getters and Setters
     public String getProductOfferingId() {

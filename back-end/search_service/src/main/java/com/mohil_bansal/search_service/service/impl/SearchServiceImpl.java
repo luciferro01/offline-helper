@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -54,49 +55,52 @@ public class SearchServiceImpl implements SearchService {
 
 
     @Override
-    @KafkaListener(topics = "product-updates", groupId = "${spring.kafka.consumer.group-id}")
     public ProductOfferingDto update(ProductOfferingDto productOfferingDto) {
         log.info("Received Product Offering Update Event: {}", productOfferingDto);
-//        try{
-//            ObjectMapper objectMapper = new ObjectMapper();
-//            ProductOfferingUpdateEvent updateEvent = objectMapper.readValue(event, ProductOfferingUpdateEvent.class);
-//            log.info("Product Offering Update Event: {}", updateEvent.getOperationType());
-//            log.info("Product Offering DTO: {}", updateEvent.getProductOfferingDto());
-//            productOfferingDto = updateEvent.getProductOfferingDto();
+        ProductOffering existingOffering = productOfferingRepository.findById((productOfferingDto.getId())).orElseThrow(()-> new RuntimeException("Product Offering not found"));
+        productOfferingRepository.save(existingOffering);
+        rankCalculatorService.recalculateAllSellerRanks();
+        return productOfferingDto;
+
+//        if (existingOffering != null) {
+////            existingOffering.setSellerRank(calculateRank(offering));
+//            productOfferingRepository.save(existingOffering);
+//            rankCalculatorService.recalculateAllSellerRanks();
+//            return productOfferingDto;
 //        }
-//        catch (Exception e){
-//            e.printStackTrace();
+//        else {
+//            // If for some reason the document doesn't exist, just update the one we have
+//            offering.setSellerRank(calculateRank(offering));
+//            productOfferingRepository.save(offering);
 //        }
-//
-//        log.info(productOfferingDto.toString());
-        return null;
+//        return null;
     }
 
     @KafkaListener(topics = "product-updates", groupId = "${spring.kafka.consumer.group-id}")
     public void consumeProductOfferingUpdateEvent(String event) {
         ProductOfferingDto productOfferingDto = new ProductOfferingDto();
         log.info("Received Product Offering Update Event: {}", event);
-//        try{
-//            ObjectMapper objectMapper = new ObjectMapper();
-//            ProductOfferingUpdateEvent updateEvent = objectMapper.readValue(event, ProductOfferingUpdateEvent.class);
-//
-//            //Logs
-//            log.info("Product Offering Update Event: {}", updateEvent.getOperationType());
-//            log.info("Product Offering DTO: {}", updateEvent.getProductOfferingDto());
-//
-//            //Calling respective Methods
-//            if(updateEvent.getOperationType() == "CREATE"){
-//                create(updateEvent.getProductOfferingDto());
-//            }else if(updateEvent.getOperationType() == "UPDATE"){
-//                update(updateEvent.getProductOfferingDto());
-//            }
-//            productOfferingDto = updateEvent.getProductOfferingDto();
-//        }
-//        catch (Exception e){
-//            e.printStackTrace();
-//        }
-//
-//        log.info(productOfferingDto.toString());
+        try{
+            ObjectMapper objectMapper = new ObjectMapper();
+            ProductOfferingUpdateEvent updateEvent = objectMapper.readValue(event, ProductOfferingUpdateEvent.class);
+
+            //Logs
+            log.info("Product Offering Update Event: {}", updateEvent.getOperationType());
+            log.info("Product Offering DTO: {}", updateEvent.getProductOfferingDto());
+
+            create(updateEvent.getProductOfferingDto());
+            //Calling respective Methods
+            if("CREATE".equals(updateEvent.getOperationType())){
+            }else if("UPDATE".equals(updateEvent.getOperationType())){
+                update(updateEvent.getProductOfferingDto());
+            }
+            productOfferingDto = updateEvent.getProductOfferingDto();
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+
+        log.info(productOfferingDto.toString());
     }
 
 

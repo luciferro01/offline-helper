@@ -5,6 +5,7 @@ import lombok.Data;
 
 @Data
 public class SearchProductOfferingDto {
+    private String id;
     private String productOfferingId;  // Unique ID for this product offering
     private Long productId;  // Reference to the product ID
     private String productName;  // Product name
