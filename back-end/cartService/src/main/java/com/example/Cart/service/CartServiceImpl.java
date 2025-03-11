@@ -1,5 +1,6 @@
 package com.example.Cart.service;
 
+import com.example.Cart.client.OrderServiceClient;
 import com.example.Cart.dto.CartDto;
 import com.example.Cart.dto.CartItemDto;
 import com.example.Cart.entity.Cart;
@@ -11,12 +12,10 @@ import com.example.Cart.utils.CommonResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.ResponseEntity;
 
 
 import java.util.List;
@@ -31,12 +30,15 @@ public class CartServiceImpl implements CartService {
     @Autowired
     private CartItemRepository cartItemRepository;
 
+    //@Autowired
+    //private RestTemplate restTemplate;
+
     @Autowired
-    private RestTemplate restTemplate;
+    private OrderServiceClient orderServiceClient;
 
-    private static final String ADD_ORDER_SERVICE_URL = "http://localhost:8083/orders/create/";
+    //private static final String ADD_ORDER_SERVICE_URL = "http://localhost:8083/orders/create/";
 
-    public CommonResponse<CartDto> getCartByUserId(Long userId) {
+    public CommonResponse<CartDto> getCartByUserId(Long userId) { // **Add this method implementation**
         log.info("Fetching cart for user id: {}", userId);
         Cart cart = cartRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart not found for user id: " + userId));
@@ -93,6 +95,7 @@ public class CartServiceImpl implements CartService {
         return CommonResponse.success(null, 200, "Cart cleared");
     }
 
+    @Transactional
     public CommonResponse<String> checkoutCart(Long userId) {
         log.info("Checking cart for user id: {}", userId);
         Cart cart = cartRepository.findByUserId(userId)
@@ -107,13 +110,11 @@ public class CartServiceImpl implements CartService {
 
         log.info("Creating order for user id: {}", userId);
 
-        CommonResponse<String> response = restTemplate.exchange(
-                ADD_ORDER_SERVICE_URL + userId,
-                HttpMethod.POST,
-                new HttpEntity<>(cart),
-                new ParameterizedTypeReference<CommonResponse<String>>() {
-                }
-        ).getBody();
+        CartDto cartDto = convertToDto(cart);
+
+        CommonResponse<String> responseEntity = orderServiceClient.createOrder(userId, cartDto);
+        CommonResponse<String> response = responseEntity;
+
 
         log.info(response.getData());
 

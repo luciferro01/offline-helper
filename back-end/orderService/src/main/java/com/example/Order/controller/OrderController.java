@@ -2,9 +2,10 @@ package com.example.Order.controller;
 
 import com.example.Order.dto.OrderDto;
 import com.example.Order.service.OrderService;
-import com.example.Order.service.OrderServiceImpl;
 import com.example.Order.utils.CommonResponse;
+import com.example.Order.dto.CartDto; // Import CartDto from Order Service's package
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,9 +18,9 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
-    @PostMapping("/create/{userId}")
-    public ResponseEntity<CommonResponse<String>> createOrder(@PathVariable Long userId, @RequestBody OrderServiceImpl.Cart cart) {
-        return ResponseEntity.ok(orderService.addOrder(userId, cart));
+    @PostMapping(value = "/create/{userId}", consumes = {MediaType.APPLICATION_JSON_VALUE})
+    public CommonResponse<String> createOrder(@PathVariable Long userId, @RequestBody CartDto cart) { // Use Order Service's CartDto
+        return ResponseEntity.ok(orderService.addOrder(userId, cart)).getBody();
     }
 
     @GetMapping("/{userId}")

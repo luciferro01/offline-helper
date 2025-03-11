@@ -23,8 +23,11 @@ public class CartController {
         return ResponseEntity.ok(cartService.getCartByUserId(userId));
     }
 
-    @PostMapping("/{userId}/items")
-    public ResponseEntity<CommonResponse<CartItemDto>> addItem(@PathVariable Long userId, @RequestBody CartItemDto itemDto) {
+    @PostMapping("/addToCart")
+    public ResponseEntity<CommonResponse<CartItemDto>> addItem(@RequestParam Long userId, @RequestParam Long productOfferingId ,@RequestParam Integer quantity) {
+        CartItemDto itemDto = new CartItemDto();
+        itemDto.setQuantity(quantity);
+        itemDto.setProductOfferingId(productOfferingId);
         return ResponseEntity.ok(cartService.addItemToCart(userId, itemDto));
     }
 
