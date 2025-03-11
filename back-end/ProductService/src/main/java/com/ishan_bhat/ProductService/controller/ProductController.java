@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.validation.Valid;
 import java.util.List;
-
+@Slf4j
 @RestController
 @RequestMapping("/products")
 public class ProductController {
@@ -29,11 +29,18 @@ public class ProductController {
         return ResponseEntity.ok(CommonResponse.success(products, HttpStatus.OK.value(), "Products fetched successfully"));
     }
 
+//    @GetMapping("/{productId}")
+//    public ResponseEntity<CommonResponse<ProductDto>> getProductById(@PathVariable Long productId) {
+//        System.out.println("Hello");
+//        ProductDto product = productService.getProductById(productId);
+//        return ResponseEntity.ok(CommonResponse.success(product, HttpStatus.OK.value(), "Product fetched successfully"));
+//    }
     @GetMapping("/{productId}")
-    public ResponseEntity<CommonResponse<ProductDto>> getProductById(@PathVariable Long productId) {
-        System.out.println("Hello");
+    @ResponseBody
+    public CommonResponse<ProductDto> getProductById(@PathVariable Long productId) {
+        log.info("Fetching product with ID: {}", productId);
         ProductDto product = productService.getProductById(productId);
-        return ResponseEntity.ok(CommonResponse.success(product, HttpStatus.OK.value(), "Product fetched successfully"));
+        return CommonResponse.success(product, HttpStatus.OK.value(), "Product fetched successfully");
     }
 
     @PostMapping

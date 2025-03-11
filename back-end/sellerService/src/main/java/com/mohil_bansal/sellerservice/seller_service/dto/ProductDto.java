@@ -1,9 +1,9 @@
-package com.ishan_bhat.ProductService.dto;
+package com.mohil_bansal.sellerservice.seller_service.dto;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-//import com.fasterxml.jackson.databind.JsonNode;
 
 @Data
 @NoArgsConstructor
@@ -15,4 +15,5 @@ public class ProductDto {
     private String description;
     //private JsonNode images;
     private String imagesUrl;
+    // Note: SellerDto is NOT included here, as we are fetching Product from Product Service, not Seller from Seller Service in this client.
 }
