@@ -178,11 +178,13 @@ public class SellerServiceImpl implements SellerService {
 
         Seller seller = sellerRepository.findById(offering.getSellerId())
                 .orElseThrow(() -> new ResourceNotFoundException("Seller not found with id: " + offeringDto.getSellerId()));
-        if(seller.getTotalSold() > 0){
-            seller.setRating( ( ( seller.getRating() * (seller.getTotalSold()) ) + offering.getRating() ) / (seller.getTotalSold() + 1) );
+        if (seller.getTotalSold() > 0 && offering.getSold() > 0) {
+            int totalUnitsSold = seller.getTotalSold() + offering.getSold();
+            double weightedRating = ((seller.getRating() * seller.getTotalSold()) + (offering.getRating() * offering.getSold())) / totalUnitsSold;
+            seller.setRating(weightedRating);
         }
-        seller.setTotalStock(seller.getTotalStock() - (oldStock + offering.getStock()));
-        seller.setTotalSold(seller.getTotalSold() - (oldSold + offering.getSold()));
+        seller.setTotalStock(seller.getTotalStock() - oldStock + offering.getStock());
+        seller.setTotalSold(seller.getTotalSold() - oldSold + offering.getSold());
         sellerRepository.save(seller);
 
         return convertToDto(offering);
