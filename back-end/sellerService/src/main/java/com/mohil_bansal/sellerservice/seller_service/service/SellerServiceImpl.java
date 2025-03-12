@@ -184,7 +184,7 @@ public class SellerServiceImpl implements SellerService {
         searchProductOfferingDto.setTotalProductsOffered(totalProductsOffered);
         searchProductOfferingDto.setProductsSoldCount(seller.getTotalSold());
         searchProductOfferingDto.setProductReviews(0);
-        searchProductOfferingDto.setCategory("Electronics");
+        searchProductOfferingDto.setCategory(productDetails.getCategoryName());
         String id = offering.getId() + "-" + offering.getProductId();
         searchProductOfferingDto.setId(id);
 
