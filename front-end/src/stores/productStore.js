@@ -237,11 +237,11 @@ export const useProductStore = defineStore('product', {
     currentProduct: null,
     loading: false,
     error: null,
-    search: '',
+    search: ' ',
     statusMessage: '',
 
     // Flag to toggle between mock data and API calls
-    useMockData: true, // Set to false when ready to use real API
+    useMockData: false, // Set to false when ready to use real API
   }),
 
   getters: {
@@ -268,9 +268,10 @@ export const useProductStore = defineStore('product', {
 
       // Original API code
       try {
-        const response = await api.get(`/search?${this.search}`)
-        this.allProducts = response.data
+        const response = await api.get(`/search?query=${this.search}`)
+        this.allProducts = response.data.data
         this.statusMessage = response.message
+        console.log(response.data.data)
         return this.allProducts
       } catch (error) {
         console.error('Error fetching products:', error)
@@ -298,7 +299,7 @@ export const useProductStore = defineStore('product', {
 
       // Original API code
       try {
-        const response = await api.get('/search?=" "')
+        const response = await api.get('/search?query=${this.search}')
         this.featuredProducts = response.data
         this.statusMessage = response.message
         return this.featuredProducts
@@ -377,10 +378,13 @@ export const useProductStore = defineStore('product', {
 
       // Original API code
       try {
-        const response = await api.get('/products/search', {
-          params: { q: query },
-        })
-        this.allProducts = response.data
+        const response = await api.get(
+          '/search?query=' + query,
+          //    {
+          //   params: { q: query },
+          // }
+        )
+        this.allProducts = response.data.data
         this.statusMessage = response.message
         return this.allProducts
       } catch (error) {

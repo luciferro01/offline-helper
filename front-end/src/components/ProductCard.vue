@@ -1,13 +1,13 @@
 <template>
   <div class="product-card" @click="navigateToProduct">
     <div class="product-image">
-      <img :src="product.imageUrl" :alt="product.name" />
+      <img :src="product.productImage" :alt="product.name" />
       <slot name="badge"></slot>
     </div>
     <div class="product-info">
-      <h3 class="product-name">{{ product.name }}</h3>
+      <h3 class="product-name">{{ product.productName }}</h3>
       <div class="product-price">₹{{ formatPrice(product.price) }}</div>
-      <div class="product-seller">{{ product.seller }}</div>
+      <div class="product-seller">{{ product.sellerName }}</div>
       <div class="product-rating">
         <div class="stars">
           <span
@@ -18,7 +18,7 @@
             >★</span
           >
         </div>
-        <span class="rating-count">({{ product.ratingCount }})</span>
+        <span class="rating-count">({{ product.productReviews }})</span>
       </div>
       <slot name="actions"></slot>
     </div>
