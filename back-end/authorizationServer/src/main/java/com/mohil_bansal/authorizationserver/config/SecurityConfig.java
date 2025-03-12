@@ -38,20 +38,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
-//@Override
-//protected void configure(HttpSecurity http) throws Exception {
-//    http.csrf().disable() // Disable CSRF for stateless authentication
-//            .authorizeRequests()
-//            .antMatchers("/auth/register", "/auth/login", "/auth/refresh", "/auth/validate", "/auth/logout")
-//            .permitAll() // Allow unauthenticated access to these endpoints
-//            .antMatchers("/auth/ok") // Protect this endpoint and require authentication
-//            .authenticated() // Ensure the user is authenticated
-//            .anyRequest().authenticated() // Protect all other endpoints
-//            .and()
-//            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class) // Add JWT filter before authentication
-//            .sessionManagement()
-//            .sessionCreationPolicy(SessionCreationPolicy.STATELESS); // Use stateless authentication
-//}
 
     @Bean
     public PasswordEncoder passwordEncoder() {
