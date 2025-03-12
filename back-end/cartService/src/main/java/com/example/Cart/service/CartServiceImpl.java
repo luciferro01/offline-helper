@@ -3,6 +3,7 @@ package com.example.Cart.service;
 import com.example.Cart.client.OrderServiceClient;
 import com.example.Cart.dto.CartDto;
 import com.example.Cart.dto.CartItemDto;
+import com.example.Cart.dto.EmailDetailsDto;
 import com.example.Cart.entity.Cart;
 import com.example.Cart.entity.CartItem;
 import com.example.Cart.exception.ResourceNotFoundException;
@@ -12,6 +13,9 @@ import com.example.Cart.utils.CommonResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -35,6 +39,15 @@ public class CartServiceImpl implements CartService {
 
     @Autowired
     private OrderServiceClient orderServiceClient;
+
+
+    //Email Functionality
+
+    @Autowired
+    private JavaMailSender javaMailSender;
+
+    @Value("${spring.mail.username}")
+    private String sender;
 
     //private static final String ADD_ORDER_SERVICE_URL = "http://localhost:8083/orders/create/";
 
@@ -96,7 +109,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Transactional
-    public CommonResponse<String> checkoutCart(Long userId) {
+    public CommonResponse<String> checkoutCart(Long userId, String email) {
         log.info("Checking cart for user id: {}", userId);
         Cart cart = cartRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart not found for user id: " + userId));
@@ -112,16 +125,37 @@ public class CartServiceImpl implements CartService {
 
         CartDto cartDto = convertToDto(cart);
 
-        CommonResponse<String> responseEntity = orderServiceClient.createOrder(userId, cartDto);
-        CommonResponse<String> response = responseEntity;
-
+//        CommonResponse<String> responseEntity = ;
+        CommonResponse<String> response = orderServiceClient.createOrder(userId, cartDto);
 
         log.info(response.getData());
 
         log.info("Order created successfully. Clearing cart: {}", cart.getId());
         cartItemRepository.deleteByCartId(cart.getId());
 
+       String res = sendSimpleEmail(new EmailDetailsDto( "Order Confirmation", "Your order has been placed successfully", email));
+       log.info(res);
         return CommonResponse.success(null, 200, "Cart Bought");
+    }
+
+    @Override
+    public String sendSimpleEmail(EmailDetailsDto details) {
+        try {
+            SimpleMailMessage mailMessage
+                    = new SimpleMailMessage();
+
+            mailMessage.setFrom(sender);
+            mailMessage.setTo(details.getRecipient());
+            mailMessage.setText(details.getMessage());
+            mailMessage.setSubject(details.getSubject());
+
+            // Sending the mail
+            log.info("Sending mail with details: {}", details);
+            javaMailSender.send(mailMessage);
+            return "Mail Sent Successfully...";
+        } catch (Exception e) {
+            return "Error while Sending Mail";
+        }
     }
 
 

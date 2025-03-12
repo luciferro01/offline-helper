@@ -46,8 +46,8 @@ public class CartController {
         return ResponseEntity.ok(cartService.clearCart(userId));
     }
 
-    @GetMapping("/checkout/{userId}")
-    public ResponseEntity<CommonResponse<String>> checkoutCart(@PathVariable Long userId) {
-        return ResponseEntity.ok(cartService.checkoutCart(userId));
+    @GetMapping("/checkout/{userId}/{email}")
+    public ResponseEntity<CommonResponse<String>> checkoutCart(@PathVariable Long userId, @PathVariable String email) {
+        return ResponseEntity.ok(cartService.checkoutCart(userId, email));
     }
 }
