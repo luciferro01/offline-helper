@@ -4,7 +4,6 @@ import com.mohil_bansal.search_service.dto.ProductOfferingDto;
 import com.mohil_bansal.search_service.entity.ProductOffering;
 import com.mohil_bansal.search_service.service.SearchService;
 import com.mohil_bansal.search_service.utils.CommonResponse;
-import org.apache.solr.client.solrj.SolrQuery;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
