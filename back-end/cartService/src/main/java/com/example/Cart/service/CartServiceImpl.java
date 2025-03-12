@@ -1,9 +1,11 @@
 package com.example.Cart.service;
 
 import com.example.Cart.client.OrderServiceClient;
+import com.example.Cart.client.ProductOfferingServiceClient;
 import com.example.Cart.dto.CartDto;
 import com.example.Cart.dto.CartItemDto;
 import com.example.Cart.dto.EmailDetailsDto;
+import com.example.Cart.dto.ProductOfferingDto;
 import com.example.Cart.entity.Cart;
 import com.example.Cart.entity.CartItem;
 import com.example.Cart.exception.ResourceNotFoundException;
@@ -40,6 +42,9 @@ public class CartServiceImpl implements CartService {
     @Autowired
     private RestTemplate restTemplate;
 
+    @Autowired
+    private ProductOfferingServiceClient productOfferingServiceClient;
+
 
     //Email Functionality
 
@@ -60,6 +65,15 @@ public class CartServiceImpl implements CartService {
 
     public CommonResponse<CartItemDto> addItemToCart(Long userId, CartItemDto itemDto) {
         log.info("Adding item to cart for user id: {}", userId);
+
+        CommonResponse<ProductOfferingDto> response = productOfferingServiceClient.getProductOffering(itemDto.getProductOfferingId());
+        ProductOfferingDto productOfferingDto = response.getData();
+        log.info("ProductOffering Fetched : {}", productOfferingDto);
+
+        itemDto.setProductName(productOfferingDto.getProductName());
+        itemDto.setPrice(productOfferingDto.getPrice());
+        itemDto.setProductImageUrl(productOfferingDto.getProductImageUrl());
+
         Cart cart = cartRepository.findByUserId(userId)
                 .orElseGet(() -> {
                     Cart newCart = new Cart();
@@ -183,7 +197,7 @@ public class CartServiceImpl implements CartService {
     }
 
     private CartItemDto convertItemToDto(CartItem item) {
-        return new CartItemDto(item.getId(), item.getProductOfferingId(), item.getQuantity());
+        return new CartItemDto(item.getId(), item.getProductOfferingId(), item.getQuantity(), item.getProductName(), item.getPrice(), item.getProductImageUrl());
     }
 
 }

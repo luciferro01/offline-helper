@@ -55,10 +55,10 @@ public class SellerController {
 
     // Get product offerings by id
     @GetMapping("/{productOfferingId}")
-    public ResponseEntity<CommonResponse<ProductOfferingDto>> getProductOffering(@PathVariable Long productOfferingId) {
+    public CommonResponse<ProductOfferingDto> getProductOffering(@PathVariable Long productOfferingId) {
         ProductOfferingDto offering = sellerService.getProductOffering(productOfferingId);
         CommonResponse<ProductOfferingDto> response = CommonResponse.success(offering, 200, "Product offering fetched successfully");
-        return ResponseEntity.ok(response);
+        return response;
     }
     
     // Get product offerings by seller
