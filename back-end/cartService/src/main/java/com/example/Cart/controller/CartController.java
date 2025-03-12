@@ -5,6 +5,7 @@ import com.example.Cart.dto.CartDto;
 import com.example.Cart.dto.CartItemDto;
 import com.example.Cart.service.CartService;
 import com.example.Cart.utils.CommonResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/carts")
 @CrossOrigin(origins = "*")
+@Slf4j
 public class CartController {
 
     @Autowired
@@ -50,5 +52,11 @@ public class CartController {
     @GetMapping("/checkout")
     public ResponseEntity<CommonResponse<String>> checkoutCart(@RequestParam String email, @RequestParam Long userId) {
         return ResponseEntity.ok(cartService.checkoutCart(userId, email));
+    }
+
+    @PostMapping("/dummy")
+    public ResponseEntity<CommonResponse<String>> dummy(@RequestParam Long userId) {
+        log.info("Dummy endpoint hit for user id: {}", userId);
+        return ResponseEntity.ok(CommonResponse.success(""+ userId, 200, ""));
     }
 }
