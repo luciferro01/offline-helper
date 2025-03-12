@@ -99,6 +99,8 @@ public class OrderServiceImpl implements OrderService {
             order.setQuantity(item.getQuantity());
             order.setPrice(product.getPrice());
             order.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+            order.setProductOfferingName(product.getProductName());
+            order.setProductImageUrl(product.getProductImageUrl());
 
             orderRepository.save(order);
         });
@@ -115,7 +117,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         List<OrderDto> orderDtos = orders.stream()
-                .map(order -> new OrderDto(order.getId(), order.getUserId(), order.getProductOfferingId(), order.getPrice(), order.getQuantity(), order.getCreatedAt()))
+                .map(order -> new OrderDto(order.getId(), order.getUserId(), order.getProductOfferingId(), order.getProductOfferingName(), order.getProductImageUrl(), order.getPrice(), order.getQuantity(), order.getCreatedAt()))
                 .collect(Collectors.toList());
 
         return CommonResponse.success(orderDtos, 200, "Order history fetched successfully");
