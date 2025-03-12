@@ -34,18 +34,6 @@ public class AuthController {
         }
     }
 
-//    @PostMapping("/login")
-//    public ResponseEntity<CommonResponse<LogInResponseDto>> login(@RequestBody LoginRequestDto request) {
-//        try {
-//            LogInResponseDto logInResponseDto = userService.login(request);
-//            return ResponseEntity.ok(
-//                    CommonResponse.success(tokenResponse, 200, "Login successful"));
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-//                    .body(CommonResponse.failure("Invalid credentials", 401));
-//        }
-//    }
-
     @PostMapping("/login")
     public ResponseEntity<CommonResponse<LogInResponseDto>> login(@RequestBody LoginRequestDto request) {
         try {
@@ -77,18 +65,7 @@ public class AuthController {
         }
     }
 
-//    @GetMapping("/is-authorized")
-//    public ResponseEntity<CommonResponse<Boolean>> isAuthorized(@RequestHeader("Authorization") String authHeader) {
-//        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-//            String token = authHeader.substring(7);
-//            boolean isValid = userService.validateToken(token);
-//            return ResponseEntity.ok(
-//                    CommonResponse.success(isValid, 200,
-//                            isValid ? "User is authorized" : "User is not authorized"));
-//        }
-//        return ResponseEntity.ok(
-//                CommonResponse.failure("No valid token provided", 200));
-//    }
+    //Old Method if new method gives any error use this method it was working fine till now
 
     //Trying this method
 //    @GetMapping("/is-authorized")
@@ -117,6 +94,8 @@ public class AuthController {
 //            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 //        }
 //    }
+
+    //Something structure finally
 
     @GetMapping("/is-authorized")
     public ResponseEntity<CommonResponse<AuthorizationDto>> isAuthorized(
@@ -152,10 +131,20 @@ public class AuthController {
                 CommonResponse.success(isValid, 200, isValid ? "Token is valid" : "Token is invalid"));
     }
 
+    //    @PostMapping("/logout")
+//    public ResponseEntity<CommonResponse<Boolean>> logout(@RequestParam String refreshToken) {
+//        boolean loggedOut = userService.logout(refreshToken);
+//        return ResponseEntity.ok(
+//                CommonResponse.success(loggedOut, 200, loggedOut ? "Logged out successfully" : "Logout failed"));
+//    }
     @PostMapping("/logout")
-    public ResponseEntity<CommonResponse<Boolean>> logout(@RequestParam String refreshToken) {
+    public ResponseEntity<CommonResponse<Boolean>> logout(@RequestHeader("Refresh-Token") String refreshToken) {
         boolean loggedOut = userService.logout(refreshToken);
-        return ResponseEntity.ok(
-                CommonResponse.success(loggedOut, 200, loggedOut ? "Logged out successfully" : "Logout failed"));
+        if (loggedOut) {
+            return ResponseEntity.ok(
+                    CommonResponse.success(true, 200, "Logged out successfully"));
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(CommonResponse.failure("Logout failed", 400));
     }
 }
