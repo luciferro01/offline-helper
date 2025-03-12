@@ -10,6 +10,7 @@ import orders from '@/views/orders.vue'
 import cart from '@/views/cart.vue' // We'll create this
 import checkout from '@/views/checkout.vue'
 import ProductDetail from '@/views/ProductDetail.vue'
+import review from '@/views/review.vue'
 
 const routes = [
   {
@@ -53,9 +54,14 @@ const routes = [
     component: cart,
   },
   {
-    path: '/checkout',
+    path: '/checkout/:userId',
     name: 'Checkout',
     component: checkout,
+  },
+  {
+    path: '/review/:product_offering_id/:user_id',
+    name: 'Review',
+    component: review
   },
   {
     path: '/:pathMatch(.*)*',

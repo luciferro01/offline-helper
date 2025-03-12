@@ -3,7 +3,7 @@ import axios from 'axios'
 
 // Create base API instance with correct base URL
 const api = axios.create({
-  baseURL: 'http://localhost:8088', // Remove /carts from base URL
+  baseURL: 'http://localhost:8087', // Remove /carts from base URL
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
