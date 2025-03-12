@@ -1,9 +1,6 @@
 package com.mohil_bansal.authorizationserver.controller;
 
-import com.mohil_bansal.authorizationserver.dto.LoginRequestDto;
-import com.mohil_bansal.authorizationserver.dto.RefreshRequestDto;
-import com.mohil_bansal.authorizationserver.dto.RegisterRequestDto;
-import com.mohil_bansal.authorizationserver.dto.TokenResponseDto;
+import com.mohil_bansal.authorizationserver.dto.*;
 import com.mohil_bansal.authorizationserver.service.UserService;
 import com.mohil_bansal.authorizationserver.util.CommonResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,12 +27,29 @@ public class AuthController {
         }
     }
 
+//    @PostMapping("/login")
+//    public ResponseEntity<CommonResponse<LogInResponseDto>> login(@RequestBody LoginRequestDto request) {
+//        try {
+//            LogInResponseDto logInResponseDto = userService.login(request);
+//            return ResponseEntity.ok(
+//                    CommonResponse.success(tokenResponse, 200, "Login successful"));
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+//                    .body(CommonResponse.failure("Invalid credentials", 401));
+//        }
+//    }
+
     @PostMapping("/login")
-    public ResponseEntity<CommonResponse<TokenResponseDto>> login(@RequestBody LoginRequestDto request) {
+    public ResponseEntity<CommonResponse<LogInResponseDto>> login(@RequestBody LoginRequestDto request) {
         try {
-            TokenResponseDto tokenResponse = userService.login(request);
-            return ResponseEntity.ok(
-                    CommonResponse.success(tokenResponse, 200, "Login successful"));
+            LogInResponseDto loginResponse = userService.login(request);
+            TokenResponseDto tokenResponse = new TokenResponseDto(loginResponse.getAccessToken(), loginResponse.getRefreshToken());
+            loginResponse.setAccessToken(null);
+            loginResponse.setRefreshToken(null);
+            return ResponseEntity.ok()
+                    .header("Access-Token", tokenResponse.getAccessToken())
+                    .header("Refresh-Token", tokenResponse.getRefreshToken())
+                    .body(CommonResponse.success(loginResponse, 200, "Login successful"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(CommonResponse.failure("Invalid credentials", 401));
@@ -43,11 +57,13 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<CommonResponse<TokenResponseDto>> refresh(@RequestBody RefreshRequestDto request) {
+    public ResponseEntity<CommonResponse<String>> refresh(@RequestBody RefreshRequestDto request) {
         try {
             TokenResponseDto tokenResponse = userService.refreshToken(request);
-            return ResponseEntity.ok(
-                    CommonResponse.success(tokenResponse, 200, "Token refreshed successfully"));
+            return ResponseEntity.ok()
+                    .header("Access-Token", tokenResponse.getAccessToken())
+                    .header("Refresh-Token", tokenResponse.getRefreshToken())
+                    .body(CommonResponse.success("Token refreshed successfully", 200, "Token refreshed successfully"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(CommonResponse.failure(e.getMessage(), 401));
@@ -68,7 +84,7 @@ public class AuthController {
     }
 
     @GetMapping("/ok")
-    public  ResponseEntity<CommonResponse<String>> ok(){
+    public ResponseEntity<CommonResponse<String>> ok() {
         return ResponseEntity.ok(
                 CommonResponse.success("Yes", 200, "Yes"));
     }

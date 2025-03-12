@@ -1,9 +1,6 @@
 package com.mohil_bansal.authorizationserver.service.impl;
 
-import com.mohil_bansal.authorizationserver.dto.LoginRequestDto;
-import com.mohil_bansal.authorizationserver.dto.RefreshRequestDto;
-import com.mohil_bansal.authorizationserver.dto.RegisterRequestDto;
-import com.mohil_bansal.authorizationserver.dto.TokenResponseDto;
+import com.mohil_bansal.authorizationserver.dto.*;
 import com.mohil_bansal.authorizationserver.entity.User;
 import com.mohil_bansal.authorizationserver.exception.DataAlreadyExistsException;
 import com.mohil_bansal.authorizationserver.exception.ResourceNotFoundException;
@@ -63,11 +60,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public TokenResponseDto login(LoginRequestDto loginRequest) {
-//        Authentication authentication = authenticationManager.authenticate(
-//                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
-//        );
-
+    public LogInResponseDto login(LoginRequestDto loginRequest) {
         User user = userRepository.findByEmail(loginRequest.getEmail());
         String accessToken = jwtTokenUtil.generateToken(user);
         String refreshToken = UUID.randomUUID().toString();
@@ -75,7 +68,7 @@ public class UserServiceImpl implements UserService {
         // Store refresh token in Redis with user ID as value
         redisTemplate.opsForValue().set(refreshToken, user.getId().toString(), 7, TimeUnit.DAYS);
 
-        return new TokenResponseDto(accessToken, refreshToken);
+        return new LogInResponseDto(user.getEmail(), user.getName(), user.getId(), accessToken, refreshToken);
     }
 
     @Override
