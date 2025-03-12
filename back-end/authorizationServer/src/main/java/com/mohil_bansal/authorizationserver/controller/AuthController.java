@@ -3,10 +3,14 @@ package com.mohil_bansal.authorizationserver.controller;
 import com.mohil_bansal.authorizationserver.dto.*;
 import com.mohil_bansal.authorizationserver.service.UserService;
 import com.mohil_bansal.authorizationserver.util.CommonResponse;
+import com.mohil_bansal.authorizationserver.util.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -15,6 +19,8 @@ public class AuthController {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
 
     @PostMapping("/register")
     public ResponseEntity<CommonResponse<RegisterRequestDto>> register(@RequestBody RegisterRequestDto user) {
@@ -71,17 +77,45 @@ public class AuthController {
         }
     }
 
+//    @GetMapping("/is-authorized")
+//    public ResponseEntity<CommonResponse<Boolean>> isAuthorized(@RequestHeader("Authorization") String authHeader) {
+//        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+//            String token = authHeader.substring(7);
+//            boolean isValid = userService.validateToken(token);
+//            return ResponseEntity.ok(
+//                    CommonResponse.success(isValid, 200,
+//                            isValid ? "User is authorized" : "User is not authorized"));
+//        }
+//        return ResponseEntity.ok(
+//                CommonResponse.failure("No valid token provided", 200));
+//    }
+
+    //Trying this method
     @GetMapping("/is-authorized")
-    public ResponseEntity<CommonResponse<Boolean>> isAuthorized(@RequestHeader("Authorization") String authHeader) {
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            boolean isValid = userService.validateToken(token);
-            return ResponseEntity.ok(
-                    CommonResponse.success(isValid, 200,
-                            isValid ? "User is authorized" : "User is not authorized"));
+    public ResponseEntity<?> isAuthorized(@RequestHeader("Authorization") String authHeader) {
+        try {
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                String token = authHeader.substring(7);
+                boolean isValid = userService.validateToken(token);
+
+                if (isValid) {
+                    // Extract userId from token
+                    String userId = jwtTokenUtil.getUserIdFromToken(token);
+
+                    // Return both the validation result and userId
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("valid", true);
+                    response.put("userId", userId);
+                    return ResponseEntity.ok(response);
+                } else {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+                }
+            }
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } catch (Exception e) {
+            System.err.println("Error validating token: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        return ResponseEntity.ok(
-                CommonResponse.failure("No valid token provided", 200));
     }
 
     @GetMapping("/ok")
