@@ -151,16 +151,20 @@ public class SellerServiceImpl implements SellerService {
             seller.setTotalStock(0);
         log.info("Seller's total sold is {}",seller.getTotalSold());
         log.info("Seller's total stock is {}",seller.getTotalStock());
+        double weightedRating=0.0;
         if (seller.getTotalSold() > 0 && offering.getSold() > 0) {
             int totalUnitsSold = seller.getTotalSold() + offering.getSold();
 //            double weightedRating = ((seller.getRating() * seller.getTotalSold())
 //                    + (offering.getRating() * offering.getSold())) / totalUnitsSold;
 //            seller.setRating(weightedRating);
-            double weightedRating = (((seller.getRating()== null ? 0 : seller.getRating() )* seller.getTotalSold())
+            weightedRating = (((seller.getRating()== null ? 0 : seller.getRating() )* seller.getTotalSold())
                     + ((offering.getRating() == null ? 0 : offering.getRating()) * offering.getSold())) / totalUnitsSold;
         }
         seller.setTotalStock(seller.getTotalStock() - oldStock + offering.getStock());
         seller.setTotalSold(seller.getTotalSold() - oldSold + offering.getSold());
+
+        if(weightedRating!=0.0) // to update the seller rating dynamically
+            seller.setRating(weightedRating);
         sellerRepository.save(seller);
 
 
@@ -183,7 +187,7 @@ public class SellerServiceImpl implements SellerService {
         searchProductOfferingDto.setSellerRating(seller.getRating());
         searchProductOfferingDto.setTotalProductsOffered(totalProductsOffered);
         searchProductOfferingDto.setProductsSoldCount(seller.getTotalSold());
-        searchProductOfferingDto.setProductReviews(0);
+        searchProductOfferingDto.setProductReviews(offering.getSold());
         searchProductOfferingDto.setCategory(productDetails.getCategoryName());
         String id = offering.getId() + "-" + offering.getProductId();
         searchProductOfferingDto.setId(id);
@@ -265,7 +269,7 @@ public class SellerServiceImpl implements SellerService {
         searchProductOfferingDto.setTotalProductsOffered(totalProductsOffered);
         searchProductOfferingDto.setProductsSoldCount(seller.getTotalSold());
         searchProductOfferingDto.setProductReviews(0);
-        searchProductOfferingDto.setCategory("Electronics");
+        searchProductOfferingDto.setCategory(productDetails.getCategoryName());
         String id = offering.getId() + "-" + offering.getProductId();
         searchProductOfferingDto.setId(id);
 
