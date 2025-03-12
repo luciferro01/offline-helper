@@ -19,7 +19,7 @@ public class OrderController {
     private OrderService orderService;
 
     @PostMapping(value = "/create/{userId}", consumes = {MediaType.APPLICATION_JSON_VALUE})
-    public CommonResponse<String> createOrder(@PathVariable Long userId, @RequestBody CartDto cart) { // Use Order Service's CartDto
+    public CommonResponse<String> addOrder(@PathVariable Long userId, @RequestBody CartDto cart) { // Use Order Service's CartDto
         return ResponseEntity.ok(orderService.addOrder(userId, cart)).getBody();
     }
 

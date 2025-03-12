@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.*;
 public interface ProductOfferingServiceClient {
 
     @GetMapping("/seller/{productOfferingId}") // Path to get product offering in productOfferingService
-    ResponseEntity<CommonResponse<ProductOfferingDto>> getProductOffering(@PathVariable("productOfferingId") Long productOfferingId);
+    CommonResponse<ProductOfferingDto> getProductOffering(@PathVariable("productOfferingId") Long productOfferingId);
 
     @PutMapping("/seller/offering/{productOfferingId}") // Path to update product offering in productOfferingService
-    ResponseEntity<CommonResponse<ProductOfferingDto>> updateProductOffering(@PathVariable("productOfferingId") Long productOfferingId, @RequestBody ProductOfferingDto productOfferingDto);
+    CommonResponse<ProductOfferingDto> updateProductOffering(@PathVariable("productOfferingId") Long productOfferingId, @RequestBody ProductOfferingDto productOfferingDto);
 }

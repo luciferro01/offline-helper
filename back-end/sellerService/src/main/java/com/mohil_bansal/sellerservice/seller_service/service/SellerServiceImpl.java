@@ -145,11 +145,19 @@ public class SellerServiceImpl implements SellerService {
         Seller seller = sellerRepository.findById(offering.getSellerId())
                 .orElseThrow(
                         () -> new ResourceNotFoundException("Seller not found with id: " + offeringDto.getSellerId()));
+        if(seller.getTotalSold()==null)
+            seller.setTotalSold(0);
+        if(seller.getTotalStock()==null)
+            seller.setTotalStock(0);
+        log.info("Seller's total sold is {}",seller.getTotalSold());
+        log.info("Seller's total stock is {}",seller.getTotalStock());
         if (seller.getTotalSold() > 0 && offering.getSold() > 0) {
             int totalUnitsSold = seller.getTotalSold() + offering.getSold();
-            double weightedRating = ((seller.getRating() * seller.getTotalSold())
-                    + (offering.getRating() * offering.getSold())) / totalUnitsSold;
-            seller.setRating(weightedRating);
+//            double weightedRating = ((seller.getRating() * seller.getTotalSold())
+//                    + (offering.getRating() * offering.getSold())) / totalUnitsSold;
+//            seller.setRating(weightedRating);
+            double weightedRating = (((seller.getRating()== null ? 0 : seller.getRating() )* seller.getTotalSold())
+                    + ((offering.getRating() == null ? 0 : offering.getRating()) * offering.getSold())) / totalUnitsSold;
         }
         seller.setTotalStock(seller.getTotalStock() - oldStock + offering.getStock());
         seller.setTotalSold(seller.getTotalSold() - oldSold + offering.getSold());

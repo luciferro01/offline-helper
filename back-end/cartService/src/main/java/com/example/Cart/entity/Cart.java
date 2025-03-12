@@ -8,7 +8,6 @@ import java.sql.Timestamp;
 import java.util.List;
 
 
-@Data
 @Getter
 @Setter
 @NoArgsConstructor
@@ -48,5 +47,13 @@ public class Cart {
 
     public void setItems(List<CartItem> items) {
         this.items = items;
+    }
+
+    @Override
+    public String toString() {
+        return "Cart{" +
+                "id=" + id +
+                ", userId=" + userId +
+                '}';
     }
 }

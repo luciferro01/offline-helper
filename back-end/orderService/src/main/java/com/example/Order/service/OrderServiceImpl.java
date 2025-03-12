@@ -11,6 +11,9 @@ import com.example.Order.repository.OrderRepository;
 import com.example.Order.utils.CommonResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate; // Remove RestTemplate import
 import org.springframework.http.ResponseEntity; // Import ResponseEntity
@@ -26,14 +29,14 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private OrderRepository orderRepository;
 
-    //@Autowired // Remove RestTemplate Autowired
-    //private RestTemplate restTemplate;
+    @Autowired // Remove RestTemplate Autowired
+    private RestTemplate restTemplate;
 
     @Autowired
     private ProductOfferingServiceClient productOfferingServiceClient; // Inject Feign Client
 
     //private static final String CART_SERVICE_URL = "http://localhost:8082/carts/";
-    //private static final String PRODUCT_OFFERING_SERVICE_URL = "http://localhost:8081/seller/";
+    private static final String PRODUCT_OFFERING_UPDATE_URL = "http://localhost:8086/seller/offering/";
 
     public CommonResponse<String> addOrder(Long userId, CartDto cartDto) {
         log.info("Creating order from user Id: {}", cartDto.getUserId());
@@ -49,9 +52,9 @@ public class OrderServiceImpl implements OrderService {
         }
 
         cartItems.forEach(item -> {
-            // Use Feign Client to get Product Offering
-            ResponseEntity<CommonResponse<ProductOfferingDto>> poResponseResponseEntity = productOfferingServiceClient.getProductOffering(item.getProductOfferingId());
-            CommonResponse<ProductOfferingDto> poResponse = poResponseResponseEntity.getBody();
+            // using Feign Client to get Product Offering
+            CommonResponse<ProductOfferingDto> poResponse = productOfferingServiceClient.getProductOffering(item.getProductOfferingId());
+
 
             if (poResponse == null || poResponse.getData() == null) {
                 throw new IllegalStateException("Product data is null for product id: " + item.getProductOfferingId());
@@ -71,9 +74,17 @@ public class OrderServiceImpl implements OrderService {
             product.setStock(product.getStock() - item.getQuantity());
             product.setSold((product.getSold() == null ? item.getQuantity() : product.getSold()) + item.getQuantity());
 
-            // Use Feign Client to update Product Offering
-            ResponseEntity<CommonResponse<ProductOfferingDto>> updateResponseResponseEntity = productOfferingServiceClient.updateProductOffering(item.getProductOfferingId(), product);
-            CommonResponse<ProductOfferingDto> updateResponse = updateResponseResponseEntity.getBody();
+            // Im using Feign Client to update Product Offering
+            //CommonResponse<ProductOfferingDto> updateResponse = productOfferingServiceClient.updateProductOffering(item.getProductOfferingId(), product);
+            log.info("Updating product offering URL: {}", PRODUCT_OFFERING_UPDATE_URL + item.getProductOfferingId());//Logging
+            ResponseEntity<CommonResponse<ProductOfferingDto>> updateResponseEntity = restTemplate.exchange(
+                    PRODUCT_OFFERING_UPDATE_URL + item.getProductOfferingId(),
+                    HttpMethod.PUT,
+                    new HttpEntity<>(product), // Send ProductOfferingDto in the request body
+                    new ParameterizedTypeReference<CommonResponse<ProductOfferingDto>>() {}
+            );
+            CommonResponse<ProductOfferingDto> updateResponse = updateResponseEntity.getBody();
+
 
 
             if (updateResponse == null || updateResponse.getData() == null) {

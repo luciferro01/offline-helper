@@ -13,6 +13,9 @@ import com.example.Cart.utils.CommonResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -34,11 +37,8 @@ public class CartServiceImpl implements CartService {
     @Autowired
     private CartItemRepository cartItemRepository;
 
-    //@Autowired
-    //private RestTemplate restTemplate;
-
     @Autowired
-    private OrderServiceClient orderServiceClient;
+    private RestTemplate restTemplate;
 
 
     //Email Functionality
@@ -49,7 +49,7 @@ public class CartServiceImpl implements CartService {
     @Value("${spring.mail.username}")
     private String sender;
 
-    //private static final String ADD_ORDER_SERVICE_URL = "http://localhost:8083/orders/create/";
+    private static final String ADD_ORDER_SERVICE_URL = "http://localhost:8083/orders/create/";
 
     public CommonResponse<CartDto> getCartByUserId(Long userId) { // **Add this method implementation**
         log.info("Fetching cart for user id: {}", userId);
@@ -108,6 +108,7 @@ public class CartServiceImpl implements CartService {
         return CommonResponse.success(null, 200, "Cart cleared");
     }
 
+
     @Transactional
     public CommonResponse<String> checkoutCart(Long userId, String email) {
         log.info("Checking cart for user id: {}", userId);
@@ -125,17 +126,29 @@ public class CartServiceImpl implements CartService {
 
         CartDto cartDto = convertToDto(cart);
 
-//        CommonResponse<String> responseEntity = ;
-        CommonResponse<String> response = orderServiceClient.createOrder(userId, cartDto);
+        try {
+            ResponseEntity<CommonResponse<String>> responseEntity = restTemplate.exchange( // Use RestTemplate.exchange
+                    ADD_ORDER_SERVICE_URL + userId, // Call orderService URL directly
+                    HttpMethod.POST,
+                    new HttpEntity<>(cartDto), // Send CartDto in the request body
+                    new ParameterizedTypeReference<CommonResponse<String>>() {
+                    } // Expected response type
+            );
+            CommonResponse<String> response = responseEntity.getBody();
 
-        log.info(response.getData());
+            log.info(response.getData());
 
-        log.info("Order created successfully. Clearing cart: {}", cart.getId());
-        cartItemRepository.deleteByCartId(cart.getId());
+            log.info("Order created successfully. Clearing cart: {}", cart.getId());
+            cartItemRepository.deleteByCartId(cart.getId());
 
-       String res = sendSimpleEmail(new EmailDetailsDto( "Order Confirmation", "Your order has been placed successfully", email));
-       log.info(res);
-        return CommonResponse.success(null, 200, "Cart Bought");
+            String res = sendSimpleEmail(new EmailDetailsDto("Order Confirmation", "Your order has been placed successfully", email));
+            log.info(res);
+            return CommonResponse.success(null, 200, "Cart Bought");
+
+        } catch (Exception e) {
+            log.error("Error during checkout for user id: {}", userId, e);
+            return CommonResponse.failure("Failed to checkout cart. Please try again later.", 500);
+        }
     }
 
     @Override
