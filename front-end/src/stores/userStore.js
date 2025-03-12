@@ -1,130 +1,146 @@
 // src/stores/userStore.js
-import { defineStore } from 'pinia';
+import { defineStore } from 'pinia'
+import api from '@/services/apiService'
 
 export const useUserStore = defineStore('user', {
   state: () => ({
     user: null,
+    userId: null,
     isAuthenticated: false,
     loading: false,
-    error: null
+    error: null,
+    accessToken: null,
+    refreshToken: null,
   }),
-  
+
   getters: {
-    // Check if user is logged in
     loggedIn(state) {
-      return state.isAuthenticated;
+      return state.isAuthenticated
     },
-    
-    // Get current user information
     currentUser(state) {
-      return state.user;
+      return state.user
     },
-    
-    // Get user's name for display
     userName(state) {
-      return state.user?.username || 'Guest';
+      return state.user?.name || 'Guest'
     },
-    
-    // Check if there's an authentication error
     hasError(state) {
-      return !!state.error;
-    }
+      return !!state.error
+    },
   },
-  
+
   actions: {
-    // Login action
     async login(email, password) {
-      this.loading = true;
-      this.error = null;
-      
+      this.loading = true
+      this.error = null
+
       try {
-        // This would be your API call
-        // const response = await api.post('/login', { email, password });
-        
-        // For demonstration, simulating API response:
-        const mockUsers = JSON.parse(localStorage.getItem('users') || '[]');
-        const user = mockUsers.find(u => u.email === email);
-        
-        if (!user || user.password !== password) {
-          throw new Error('Invalid email or password');
-        }
-        
-        // Remove password before storing in state
-        const { password: _, ...userWithoutPassword } = user;
-        
-        // Update store state
-        this.user = userWithoutPassword;
-        this.isAuthenticated = true;
-        
+        const response = await api.post(
+          '/auth/login',
+          { email, password },
+          // {
+          //   withCredentials: true, // Important for CORS with credentials
+          // },
+        )
+
+        console.log('Full response:', response)
+
+        // Getting Access Token
+        const accessToken = response.headers['access-token'] || response.headers['Access-Token']
+        const refreshToken = response.headers['refresh-token'] || response.headers['Refresh-Token']
+
+        console.log('Access token from headers:', accessToken)
+        console.log('Refresh token from headers:', refreshToken)
+        console.log('All headers:', response.headers)
+        //From Commonresponse we are extracting data, commmonresponse also has statuscode and success
+        const userData = response.data.data // Assuming your CommonResponse has a data field
+        // console.log('User data:', userData)
+        // console.log('Username from response:', response.data.data.name)
+
+        const { name, email: userEmail, id } = userData
+        // console.log('Username object:', name)
+        // console.log('UserEmail object:', userEmail)
+
+        // Store user info
+        this.user = { name, email: userEmail }
+        // console.log('Username below:', name)
+        // console.log('UserEmail below:', userEmail)
+        this.userId = id
+        this.isAuthenticated = true
+
+        this.accessToken = accessToken
+        this.refreshToken = refreshToken
+
         // Store in localStorage for persistence
-        localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
-        
-        return { success: true };
-      } catch (error) {
-        this.error = error.message || 'Login failed';
-        return { success: false, error: this.error };
-      } finally {
-        this.loading = false;
-      }
-    },
-    
-    // Check if email exists (for signup flow)
-    checkEmailExists(email) {
-      const mockUsers = JSON.parse(localStorage.getItem('users') || '[]');
-      return mockUsers.some(user => user.email === email);
-    },
-    
-    // Signup action
-    async signup(username, email, password) {
-      this.loading = true;
-      this.error = null;
-      
-      try {
-        // This would be your API call
-        // const response = await api.post('/signup', { username, email, password });
-        
-        // For demonstration, simulating API storage:
-        const mockUsers = JSON.parse(localStorage.getItem('users') || '[]');
-        
-        // Check if user already exists
-        if (mockUsers.some(user => user.email === email)) {
-          throw new Error('Email already in use');
+        localStorage.setItem('authToken', this.accessToken)
+        if (this.refreshToken) {
+          localStorage.setItem('refreshToken', this.refreshToken)
         }
-        
-        // Create new user
-        const newUser = {
-          id: Date.now().toString(),
-          username,
-          email,
-          password // In a real app, this would be hashed on the server
-        };
-        
-        mockUsers.push(newUser); //Here also, an API Call will be required to send data to backend
-        localStorage.setItem('users', JSON.stringify(mockUsers));
-        
-        return { success: true };
+
+        localStorage.setItem(
+          'currentUser',
+          JSON.stringify({
+            name,
+            email: userEmail,
+            userId: id,
+          }),
+        )
+
+        return { success: true }
       } catch (error) {
-        this.error = error.message || 'Signup failed';
-        return { success: false, error: this.error };
+        console.error('Login error:', error)
+        this.error = error.response?.data?.message || error.message || 'Login failed'
+        return { success: false, error: this.error }
       } finally {
-        this.loading = false;
+        this.loading = false
       }
     },
-    
-    // Logout action
+
+    async signup(name, email, password, confirmPassword) {
+      this.loading = true
+      this.error = null
+
+      try {
+        await api.post('/auth/register', {
+          name,
+          email,
+          password,
+          confirmPassword,
+        })
+
+        return { success: true }
+      } catch (error) {
+        this.error = error.response?.data?.message || error.message || 'Signup failed'
+        return { success: false, error: this.error }
+      } finally {
+        this.loading = false
+      }
+    },
+
     logout() {
-      this.user = null;
-      this.isAuthenticated = false;
-      localStorage.removeItem('currentUser');
+      // Once we logout, we need to reset the user and authentication fields to null
+      this.user = null
+      this.userId = null
+      this.isAuthenticated = false
+      this.accessToken = null
+      this.refreshToken = null
+
+      // After we log out, we also need to remove from localStorage
+      localStorage.removeItem('currentUser')
+      localStorage.removeItem('authToken')
+      localStorage.removeItem('refreshToken')
     },
-    
-    // Initialize user from localStorage (called on app start)
+
     initializeUser() {
-      const storedUser = localStorage.getItem('currentUser');
-      if (storedUser) {
-        this.user = JSON.parse(storedUser);
-        this.isAuthenticated = true;
+      const storedUser = localStorage.getItem('currentUser')
+      const authToken = localStorage.getItem('authToken')
+
+      if (storedUser && authToken) {
+        this.user = JSON.parse(storedUser)
+        this.userId = this.user.userId
+        this.accessToken = authToken
+        this.refreshToken = localStorage.getItem('refreshToken') || null
+        this.isAuthenticated = true
       }
-    }
-  }
-});
+    },
+  },
+})

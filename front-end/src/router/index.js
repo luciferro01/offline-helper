@@ -46,16 +46,19 @@ const routes = [
     path: '/orders',
     name: 'Orders',
     component: orders,
+    meta: { requiresAuth: true },
   },
   {
     path: '/cart',
     name: 'Cart',
     component: cart,
+    meta: { requiresAuth: true },
   },
   {
     path: '/checkout',
     name: 'Checkout',
     component: checkout,
+    meta: { requiresAuth: true },
   },
   {
     path: '/:pathMatch(.*)*',

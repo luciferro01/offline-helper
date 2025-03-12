@@ -257,10 +257,12 @@ export default {
     },
   },
 
-  async mounted() {
+  mounted() {
+    console.log('first')
+
     try {
       console.log('Fetching product with ID:', this.id)
-      await this.fetchProductById(this.id)
+      this.fetchProductById(this.id)
       console.log('Product data received:', this.product)
       this.initializeProductDetails()
     } catch (error) {

@@ -183,6 +183,10 @@ export default {
   text-decoration: none;
 }
 
+.logo:hover {
+  transform: scale(1.2);
+}
+
 .logo-text {
   color: white;
   font-size: 1.5rem;

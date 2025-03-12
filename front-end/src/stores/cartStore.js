@@ -1,212 +1,168 @@
 // src/stores/cartStore.js
 import { defineStore } from 'pinia'
 import api from '@/services/apiService'
+import { useUserStore } from './userStore'
 
 export const useCartStore = defineStore('cart', {
   state: () => ({
-    items: [],
-    cartId: null,
-    userId: 4, // For testing - ideally this would come from a user store
+    cartItems: [],
     loading: false,
     error: null,
   }),
 
   getters: {
-    totalItems(state) {
-      return state.items.reduce((total, item) => total + item.quantity, 0)
+    totalAmount() {
+      return this.cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
     },
-
-    totalPrice(state) {
-      return state.items.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2)
+    totalItems() {
+      return this.cartItems.reduce((total, item) => total + item.quantity, 0)
     },
-
-    isEmpty(state) {
-      return state.items.length === 0
+    isEmpty() {
+      return this.cartItems.length === 0
     },
   },
 
   actions: {
-    // Fetch cart from server
-    // Add these debugging lines to your fetchCart method
     async fetchCart() {
       this.loading = true
       this.error = null
 
-      console.log('Starting fetchCart for userId:', this.userId)
-
       try {
-        console.log('Making request to:', `/carts/${this.userId}`)
-        const response = await api.get(`/carts/${this.userId}`)
+        const userStore = useUserStore()
 
-        console.log('Cart API response:', response)
-
-        if (response) {
-          // Changed from response.data since your interceptor already returns the data
-          // Store cart ID from response
-          this.cartId = response.id || response.data?.id
-          console.log('Cart ID set to:', this.cartId)
-
-          // Store items from response
-          this.items = (response.items || response.data?.items || []).map((item) => ({
-            id: item.id,
-            productId: item.productOfferingId,
-            quantity: item.quantity,
-            name: item.productName,
-            price: item.price,
-            image: item.imageUrl,
-          }))
-
-          console.log('Cart items processed:', this.items)
-          this.saveCart()
+        // Check if user is logged in
+        if (!userStore.loggedIn || !userStore.userId) {
+          throw new Error('User not authenticated')
         }
 
-        return this.items
+        // Fetch cart using userId
+        const response = await api.get(`/carts/user/${userStore.userId}`)
+
+        this.cartItems = response.data.items || []
+
+        return { success: true }
       } catch (error) {
-        console.error('Error fetching cart - DETAILS:', error)
         this.error = error.message
-        this.loadCart() // Fallback to local storage
-        return this.items
+        return { success: false, error: this.error }
       } finally {
         this.loading = false
       }
     },
 
-    // Add item to cart
-    async addToCart(product) {
+    async addToCart(productOfferingId, quantity = 1) {
       this.loading = true
       this.error = null
 
       try {
-        const itemDto = {
-          productOfferingId: product.id, // Make sure this matches your DTO
-          quantity: 1,
-          productName: product.name,
-          price: product.price,
-          imageUrl: product.imageUrl || product.image,
+        const userStore = useUserStore()
+
+        // Check if user is logged in
+        if (!userStore.loggedIn || !userStore.userId) {
+          throw new Error('Please sign in to add items to cart')
         }
 
-        // Using correct endpoint to add item to cart
-        const response = await api.post(`/carts/${this.userId}/items`, itemDto)
+        // Add item to cart
+        const response = await api.post('/carts/add', {
+          userId: userStore.userId,
+          productOfferingId,
+          quantity,
+        })
 
-        if (response.success) {
-          // Refresh the cart to get the updated state from server
-          await this.fetchCart()
-        }
+        // Update local cart with response
+        await this.fetchCart()
 
-        return true
+        return { success: true }
       } catch (error) {
-        console.error('Error adding to cart:', error)
         this.error = error.message
-        return false
+        return { success: false, error: this.error }
       } finally {
         this.loading = false
       }
     },
 
-    // Remove item from cart
-    async removeFromCart(itemId) {
+    async updateCartItem(itemId, quantity) {
       this.loading = true
       this.error = null
 
       try {
-        // Using correct endpoint to remove item from cart
-        const response = await api.delete(`/carts/${this.userId}/items/${itemId}`)
+        const userStore = useUserStore()
 
-        if (response.success) {
-          // Remove from local state
-          const index = this.items.findIndex((item) => item.id === itemId)
-          if (index !== -1) {
-            this.items.splice(index, 1)
-            this.saveCart()
-          }
+        // Check if user is logged in
+        if (!userStore.loggedIn || !userStore.userId) {
+          throw new Error('User not authenticated')
         }
 
-        return true
+        // Update cart item quantity
+        await api.put(`/carts/item/${itemId}`, {
+          userId: userStore.userId,
+          quantity,
+        })
+
+        // Refresh cart
+        await this.fetchCart()
+
+        return { success: true }
       } catch (error) {
-        console.error('Error removing from cart:', error)
         this.error = error.message
-        return false
+        return { success: false, error: this.error }
       } finally {
         this.loading = false
       }
     },
 
-    // Update item quantity
-    async updateQuantity(itemId, quantity) {
+    async removeCartItem(itemId) {
       this.loading = true
       this.error = null
 
       try {
-        if (quantity <= 0) {
-          return this.removeFromCart(itemId)
+        const userStore = useUserStore()
+
+        // Check if user is logged in
+        if (!userStore.loggedIn || !userStore.userId) {
+          throw new Error('User not authenticated')
         }
 
-        const itemDto = {
-          quantity: quantity,
-        }
+        // Remove item from cart
+        await api.delete(`/carts/item/${itemId}`, {
+          data: { userId: userStore.userId },
+        })
 
-        // Using correct endpoint to update item in cart
-        const response = await api.put(`/carts/${this.userId}/items/${itemId}`, itemDto)
+        // Refresh cart
+        await this.fetchCart()
 
-        if (response.success) {
-          // Update local state
-          const item = this.items.find((item) => item.id === itemId)
-          if (item) {
-            item.quantity = quantity
-            this.saveCart()
-          }
-        }
-
-        return true
+        return { success: true }
       } catch (error) {
-        console.error('Error updating cart:', error)
         this.error = error.message
-        return false
+        return { success: false, error: this.error }
       } finally {
         this.loading = false
       }
     },
 
-    // Clear the entire cart
     async clearCart() {
       this.loading = true
       this.error = null
 
       try {
-        // Using correct endpoint to clear cart
-        const response = await api.delete(`/carts/${this.userId}`)
+        const userStore = useUserStore()
 
-        if (response.success) {
-          this.items = []
-          this.saveCart()
+        // Check if user is logged in
+        if (!userStore.loggedIn || !userStore.userId) {
+          throw new Error('User not authenticated')
         }
 
-        return true
+        // Clear entire cart
+        await api.delete(`/carts/user/${userStore.userId}`)
+
+        // Reset local cart state
+        this.cartItems = []
+
+        return { success: true }
       } catch (error) {
-        console.error('Error clearing cart:', error)
         this.error = error.message
-        return false
+        return { success: false, error: this.error }
       } finally {
         this.loading = false
-      }
-    },
-
-    // Local storage methods (for offline support)
-    saveCart() {
-      localStorage.setItem('cart', JSON.stringify(this.items))
-      localStorage.setItem('cartId', this.cartId)
-    },
-
-    loadCart() {
-      const savedCart = localStorage.getItem('cart')
-      const savedCartId = localStorage.getItem('cartId')
-
-      if (savedCart) {
-        this.items = JSON.parse(savedCart)
-      }
-
-      if (savedCartId) {
-        this.cartId = savedCartId
       }
     },
   },

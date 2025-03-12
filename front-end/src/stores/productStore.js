@@ -318,21 +318,21 @@ export const useProductStore = defineStore('product', {
       this.currentProduct = null
 
       // Use mock data if flag is set
-      if (this.useMockData) {
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 300))
-        const product = mockProducts.find((p) => p.id === productId)
+      // if (this.useMockData) {
+      //   // Simulate API delay
+      //   await new Promise((resolve) => setTimeout(resolve, 300))
+      //   const product = mockProducts.find((p) => p.id === productId)
 
-        if (product) {
-          this.currentProduct = product
-          //this.statusMessage = 'Product loaded from mock data'
-        } else {
-          this.error = 'Product not found'
-        }
+      //   if (product) {
+      //     this.currentProduct = product
+      //     //this.statusMessage = 'Product loaded from mock data'
+      //   } else {
+      //     this.error = 'Product not found'
+      //   }
 
-        this.loading = false
-        return this.currentProduct
-      }
+      //   this.loading = false
+      //   return this.currentProduct
+      // }
 
       // Original API code
       try {
