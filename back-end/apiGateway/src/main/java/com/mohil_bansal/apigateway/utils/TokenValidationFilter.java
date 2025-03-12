@@ -41,7 +41,7 @@ public class TokenValidationFilter implements GlobalFilter, Ordered {
         // Call the Authorization Server's validation endpoint
         return webClientBuilder.build()
                 .get()
-                .uri("http://localhost:8087/auth/is-authorized") // Updated URL to match your auth service
+                .uri("http://localhost:8762/auth/is-authorized") // Updated URL to match your auth service
                 .header(HttpHeaders.AUTHORIZATION, authHeader)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()

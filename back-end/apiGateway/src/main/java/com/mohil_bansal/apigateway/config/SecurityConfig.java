@@ -14,7 +14,7 @@ public class SecurityConfig {
         return http
                 .csrf().disable()
                 .authorizeExchange()
-                .pathMatchers("/auth/**").permitAll() // Allow auth endpoints without authentication
+                .pathMatchers("/auth/**", "/search/**").permitAll() // Allow auth endpoints without authentication
                 .anyExchange().permitAll()           // Let our custom filter handle authentication
                 .and()
                 .httpBasic().disable()
