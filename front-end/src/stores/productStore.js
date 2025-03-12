@@ -379,7 +379,7 @@ export const useProductStore = defineStore('product', {
       // Original API code
       try {
         const response = await api.get(
-          '/search?query=' + query,
+          `/search?query=${query}`,
           //    {
           //   params: { q: query },
           // }

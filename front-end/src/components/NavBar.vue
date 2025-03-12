@@ -207,7 +207,7 @@ export default {
   top: 50%;
   transform: translate(-50%, -50%);
   display: flex;
-  width: 800px; /* Fixed width */
+  width: 600px; /* Fixed width */
   z-index: 1;
 }
 
