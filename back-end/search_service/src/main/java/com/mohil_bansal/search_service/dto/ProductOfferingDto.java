@@ -1,5 +1,11 @@
 package com.mohil_bansal.search_service.dto;
 
+
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+
+@AllArgsConstructor
+@NoArgsConstructor
 public class ProductOfferingDto {
     private String id;
     private String productOfferingId;  // Unique ID for this product offering
@@ -14,6 +20,16 @@ public class ProductOfferingDto {
     private int totalProductsOffered;  // Total number of different products offered by the seller
     private int productReviews;  // (New -- Avg. Rating for that product) (Old -- Number of customer reviews for the product)
     private String category;  // Category of the product (e.g., "Smartphones")
+
+    private String productImage;
+
+    public String getProductImage() {
+        return productImage;
+    }
+
+    public void setProductImage(String productImage) {
+        this.productImage = productImage;
+    }
 
     public String getId() {
         return id;

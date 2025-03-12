@@ -38,6 +38,11 @@ public class SearchServiceImpl implements SearchService {
         return productOfferingRepository.findByProductName(productName);
     }
 
+    @Override
+    public List<ProductOffering> searchByCategory(String category) {
+        return productOfferingRepository.findByCategory(category);
+    }
+
 
     public PageImpl<ProductOffering> findByProductNameContaining(String keyword, int page, int size) {
 
