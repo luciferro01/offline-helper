@@ -91,30 +91,51 @@ public class AuthController {
 //    }
 
     //Trying this method
+//    @GetMapping("/is-authorized")
+//    public ResponseEntity<?> isAuthorized(@RequestHeader("Authorization") String authHeader) {
+//        try {
+//            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+//                String token = authHeader.substring(7);
+//                boolean isValid = userService.validateToken(token);
+//
+//                if (isValid) {
+//                    // Extract userId from token
+//                    String userId = jwtTokenUtil.getUserIdFromToken(token);
+//
+//                    // Return both the validation result and userId
+//                    Map<String, Object> response = new HashMap<>();
+//                    response.put("valid", true);
+//                    response.put("userId", userId);
+//                    return ResponseEntity.ok(response);
+//                } else {
+//                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+//                }
+//            }
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+//        } catch (Exception e) {
+//            System.err.println("Error validating token: " + e.getMessage());
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+//        }
+//    }
+
     @GetMapping("/is-authorized")
-    public ResponseEntity<?> isAuthorized(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<CommonResponse<AuthorizationDto>> isAuthorized(
+            @RequestHeader("Authorization") String authHeader) {
         try {
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 String token = authHeader.substring(7);
-                boolean isValid = userService.validateToken(token);
+                AuthorizationDto authResult = userService.checkAuthorization(token);
 
-                if (isValid) {
-                    // Extract userId from token
-                    String userId = jwtTokenUtil.getUserIdFromToken(token);
-
-                    // Return both the validation result and userId
-                    Map<String, Object> response = new HashMap<>();
-                    response.put("valid", true);
-                    response.put("userId", userId);
-                    return ResponseEntity.ok(response);
-                } else {
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+                if (authResult.isValid()) {
+                    return ResponseEntity.ok(
+                            CommonResponse.success(authResult, 200, "User is authorized"));
                 }
             }
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(CommonResponse.failure("Unauthorized", 401));
         } catch (Exception e) {
-            System.err.println("Error validating token: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(CommonResponse.failure(e.getMessage(), 401));
         }
     }
 

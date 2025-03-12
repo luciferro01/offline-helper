@@ -87,8 +87,10 @@ public class TokenValidationFilter implements GlobalFilter, Ordered {
     }
 
     private String extractUserId(Map<String, Object> responseMap) {
-        if (responseMap != null && responseMap.containsKey("userId")) {
-            return responseMap.get("userId").toString();
+        if (responseMap != null && responseMap.containsKey("data")) {
+            Map<String, Object> dataMap = (Map<String, Object>) responseMap.get("data");
+            return dataMap.get("userId").toString();
+//            return responseMap.get("userId").toString();
         }
         return null;
     }

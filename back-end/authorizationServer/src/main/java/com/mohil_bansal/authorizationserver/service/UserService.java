@@ -13,4 +13,6 @@ public interface UserService {
     boolean logout(String token);
 
     boolean validateToken(String token);
+
+    AuthorizationDto checkAuthorization(String token);
 }
