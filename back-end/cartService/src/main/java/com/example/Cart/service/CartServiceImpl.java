@@ -1,8 +1,11 @@
 package com.example.Cart.service;
 
 import com.example.Cart.client.OrderServiceClient;
+import com.example.Cart.client.ProductOfferingServiceClient;
 import com.example.Cart.dto.CartDto;
 import com.example.Cart.dto.CartItemDto;
+import com.example.Cart.dto.EmailDetailsDto;
+import com.example.Cart.dto.ProductOfferingDto;
 import com.example.Cart.entity.Cart;
 import com.example.Cart.entity.CartItem;
 import com.example.Cart.exception.ResourceNotFoundException;
@@ -12,6 +15,12 @@ import com.example.Cart.utils.CommonResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -30,13 +39,22 @@ public class CartServiceImpl implements CartService {
     @Autowired
     private CartItemRepository cartItemRepository;
 
-    //@Autowired
-    //private RestTemplate restTemplate;
+    @Autowired
+    private RestTemplate restTemplate;
 
     @Autowired
-    private OrderServiceClient orderServiceClient;
+    private ProductOfferingServiceClient productOfferingServiceClient;
 
-    //private static final String ADD_ORDER_SERVICE_URL = "http://localhost:8083/orders/create/";
+
+    //Email Functionality
+
+    @Autowired
+    private JavaMailSender javaMailSender;
+
+    @Value("${spring.mail.username}")
+    private String sender;
+
+    private static final String ADD_ORDER_SERVICE_URL = "http://localhost:8766/orders/createOrder";
 
     public CommonResponse<CartDto> getCartByUserId(Long userId) { // **Add this method implementation**
         log.info("Fetching cart for user id: {}", userId);
@@ -47,6 +65,15 @@ public class CartServiceImpl implements CartService {
 
     public CommonResponse<CartItemDto> addItemToCart(Long userId, CartItemDto itemDto) {
         log.info("Adding item to cart for user id: {}", userId);
+
+        CommonResponse<ProductOfferingDto> response = productOfferingServiceClient.getProductOffering(itemDto.getProductOfferingId());
+        ProductOfferingDto productOfferingDto = response.getData();
+        log.info("ProductOffering Fetched : {}", productOfferingDto);
+
+        itemDto.setProductName(productOfferingDto.getProductName());
+        itemDto.setPrice(productOfferingDto.getPrice());
+        itemDto.setProductImageUrl(productOfferingDto.getProductImageUrl());
+
         Cart cart = cartRepository.findByUserId(userId)
                 .orElseGet(() -> {
                     Cart newCart = new Cart();
@@ -95,8 +122,9 @@ public class CartServiceImpl implements CartService {
         return CommonResponse.success(null, 200, "Cart cleared");
     }
 
+
     @Transactional
-    public CommonResponse<String> checkoutCart(Long userId) {
+    public CommonResponse<String> checkoutCart(Long userId, String email) {
         log.info("Checking cart for user id: {}", userId);
         Cart cart = cartRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart not found for user id: " + userId));
@@ -112,16 +140,49 @@ public class CartServiceImpl implements CartService {
 
         CartDto cartDto = convertToDto(cart);
 
-        CommonResponse<String> responseEntity = orderServiceClient.createOrder(userId, cartDto);
-        CommonResponse<String> response = responseEntity;
+        try {
+            ResponseEntity<CommonResponse<String>> responseEntity = restTemplate.exchange( // Use RestTemplate.exchange
+                    ADD_ORDER_SERVICE_URL + "?userId=" + userId, // Call orderService URL directly
+                    HttpMethod.POST,
+                    new HttpEntity<>(cartDto), // Send CartDto in the request body
+                    new ParameterizedTypeReference<CommonResponse<String>>() {
+                    } // Expected response type
+            );
+            CommonResponse<String> response = responseEntity.getBody();
 
+            log.info(response.getData());
 
-        log.info(response.getData());
+            log.info("Order created successfully. Clearing cart: {}", cart.getId());
+            cartItemRepository.deleteByCartId(cart.getId());
 
-        log.info("Order created successfully. Clearing cart: {}", cart.getId());
-        cartItemRepository.deleteByCartId(cart.getId());
+            String res = sendSimpleEmail(new EmailDetailsDto("Order Confirmation", "Your order has been placed successfully", email));
+            log.info(res);
+            return CommonResponse.success(null, 200, "Cart Bought");
 
-        return CommonResponse.success(null, 200, "Cart Bought");
+        } catch (Exception e) {
+            log.error("Error during checkout for user id: {}", userId, e);
+            return CommonResponse.failure("Failed to checkout cart. Please try again later.", 500);
+        }
+    }
+
+    @Override
+    public String sendSimpleEmail(EmailDetailsDto details) {
+        try {
+            SimpleMailMessage mailMessage
+                    = new SimpleMailMessage();
+
+            mailMessage.setFrom(sender);
+            mailMessage.setTo(details.getRecipient());
+            mailMessage.setText(details.getMessage());
+            mailMessage.setSubject(details.getSubject());
+
+            // Sending the mail
+            log.info("Sending mail with details: {}", details);
+            javaMailSender.send(mailMessage);
+            return "Mail Sent Successfully...";
+        } catch (Exception e) {
+            return "Error while Sending Mail";
+        }
     }
 
 
@@ -136,7 +197,7 @@ public class CartServiceImpl implements CartService {
     }
 
     private CartItemDto convertItemToDto(CartItem item) {
-        return new CartItemDto(item.getId(), item.getProductOfferingId(), item.getQuantity());
+        return new CartItemDto(item.getId(), item.getProductOfferingId(), item.getQuantity(), item.getProductName(), item.getPrice(), item.getProductImageUrl());
     }
 
 }

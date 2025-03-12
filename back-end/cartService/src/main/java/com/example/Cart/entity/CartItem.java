@@ -3,16 +3,13 @@ package com.example.Cart.entity;
 import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
 import java.sql.Timestamp;
 
 @Entity
-@ToString
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class CartItem {
@@ -30,6 +27,10 @@ public class CartItem {
 
     @Column(nullable = false)
     private Integer quantity;
+
+    private String productName;
+    private Double price;
+    private String productImageUrl;
 
     public Long getId() {
         return id;
@@ -61,5 +62,14 @@ public class CartItem {
 
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
+    }
+
+    @Override
+    public String toString() {
+        return "CartItem{" +
+                "id=" + id +
+                ", productOfferingId=" + productOfferingId +
+                ", quantity=" + quantity +
+                '}';
     }
 }

@@ -2,6 +2,7 @@ package com.example.Cart.service;
 
 import com.example.Cart.dto.CartDto;
 import com.example.Cart.dto.CartItemDto;
+import com.example.Cart.dto.EmailDetailsDto;
 import com.example.Cart.entity.Cart;
 import com.example.Cart.entity.CartItem;
 import com.example.Cart.exception.ResourceNotFoundException;
@@ -19,5 +20,7 @@ public interface CartService {
 
     CommonResponse<String> clearCart(Long userId);
 
-    CommonResponse<String> checkoutCart(Long userId);
+    CommonResponse<String> checkoutCart(Long userId, String email);
+
+    String sendSimpleEmail(EmailDetailsDto emailDetails);
 }

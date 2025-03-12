@@ -18,7 +18,7 @@ public class ProductOffering {
     @Field
     private Long productId;  // Reference to the product ID
 
-    @Field
+    @Field()
     @Indexed()
     private String productName;  // Product name
 
@@ -27,7 +27,7 @@ public class ProductOffering {
     private Long sellerId;
 
     @Field
-    @Indexed()
+    @Indexed
     private String sellerName;  // Seller name (e.g., "EasyBuy")
 
     @Field

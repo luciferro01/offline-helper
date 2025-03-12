@@ -1,18 +1,18 @@
-package com.example.Order.client;
+package com.example.Cart.client;
 
-import com.example.Order.config.FeignConfig;
-import com.example.Order.dto.ProductOfferingDto;
-import com.example.Order.utils.CommonResponse;
+import com.example.Cart.config.FeignConfig;
+import com.example.Cart.dto.ProductOfferingDto;
+import com.example.Cart.utils.CommonResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @FeignClient(name = "service-seller",configuration = FeignConfig.class) // Assuming 'seller-service' is the application name of productOfferingService in Eureka
 public interface ProductOfferingServiceClient {
 
     @GetMapping("/seller/{productOfferingId}") // Path to get product offering in productOfferingService
     CommonResponse<ProductOfferingDto> getProductOffering(@PathVariable("productOfferingId") Long productOfferingId);
-
-    @PutMapping("/seller/offering/{productOfferingId}") // Path to update product offering in productOfferingService
-    CommonResponse<ProductOfferingDto> updateProductOffering(@PathVariable("productOfferingId") Long productOfferingId, @RequestBody ProductOfferingDto productOfferingDto);
 }

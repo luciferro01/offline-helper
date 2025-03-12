@@ -22,8 +22,8 @@ public class Seller {
     private String email;
     private String phoneNumber;
     private String address;
-    private Integer totalStock;
-    private Integer totalSold;
+    private Integer totalStock ;
+    private Integer totalSold ;
     private Double rating;
     private Timestamp createdAt;
 
