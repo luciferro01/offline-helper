@@ -1,5 +1,6 @@
 package com.ishan_bhat.ProductService.controller;
 
+import com.ishan_bhat.ProductService.dto.CategoryDto;
 import com.ishan_bhat.ProductService.dto.ProductDto;
 import com.ishan_bhat.ProductService.service.ProductService;
 import com.ishan_bhat.ProductService.utils.CommonResponse;
@@ -61,4 +62,7 @@ public class ProductController {
         productService.deleteProduct(productId);
         return ResponseEntity.noContent().build(); // No content for delete, response is CommonResponse<Void> or HttpStatus.NO_CONTENT
     }
+
+//    @GetMapping("/getCategory/{id}")
+//    public ResponseEntity<CommonResponse<CategoryDto>>
 }

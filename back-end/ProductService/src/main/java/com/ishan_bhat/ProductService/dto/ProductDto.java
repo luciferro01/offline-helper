@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 public class ProductDto {
     private Long id;
     private Long categoryId;
+    private String categoryName;
     private String name;
     private String description;
     //private JsonNode images;

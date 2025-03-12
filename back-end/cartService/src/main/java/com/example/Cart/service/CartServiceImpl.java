@@ -54,7 +54,7 @@ public class CartServiceImpl implements CartService {
     @Value("${spring.mail.username}")
     private String sender;
 
-    private static final String ADD_ORDER_SERVICE_URL = "http://localhost:8083/orders/create/";
+    private static final String ADD_ORDER_SERVICE_URL = "http://localhost:8766/orders/createOrder";
 
     public CommonResponse<CartDto> getCartByUserId(Long userId) { // **Add this method implementation**
         log.info("Fetching cart for user id: {}", userId);
@@ -142,7 +142,7 @@ public class CartServiceImpl implements CartService {
 
         try {
             ResponseEntity<CommonResponse<String>> responseEntity = restTemplate.exchange( // Use RestTemplate.exchange
-                    ADD_ORDER_SERVICE_URL + userId, // Call orderService URL directly
+                    ADD_ORDER_SERVICE_URL + "?userId=" + userId, // Call orderService URL directly
                     HttpMethod.POST,
                     new HttpEntity<>(cartDto), // Send CartDto in the request body
                     new ParameterizedTypeReference<CommonResponse<String>>() {

@@ -36,7 +36,7 @@ public class OrderServiceImpl implements OrderService {
     private ProductOfferingServiceClient productOfferingServiceClient; // Inject Feign Client
 
     //private static final String CART_SERVICE_URL = "http://localhost:8082/carts/";
-    private static final String PRODUCT_OFFERING_UPDATE_URL = "http://localhost:8086/seller/offering/";
+    private static final String PRODUCT_OFFERING_UPDATE_URL = "http://localhost:8764/seller/offering/";
 
     public CommonResponse<String> addOrder(Long userId, CartDto cartDto) {
         log.info("Creating order from user Id: {}", cartDto.getUserId());

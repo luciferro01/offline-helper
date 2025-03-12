@@ -19,13 +19,13 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
-    @PostMapping(value = "/create/{userId}", consumes = {MediaType.APPLICATION_JSON_VALUE})
-    public CommonResponse<String> addOrder(@PathVariable Long userId, @RequestBody CartDto cart) { // Use Order Service's CartDto
+    @PostMapping("/createOrder")
+    public CommonResponse<String> addOrder(@RequestParam Long userId, @RequestBody CartDto cart) { // Use Order Service's CartDto
         return ResponseEntity.ok(orderService.addOrder(userId, cart)).getBody();
     }
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<CommonResponse<List<OrderDto>>> getOrderHistory(@PathVariable Long userId) {
+    @GetMapping("/getOrders")
+    public ResponseEntity<CommonResponse<List<OrderDto>>> getOrderHistory(@RequestParam Long userId) {
         CommonResponse<List<OrderDto>> response = orderService.getOrderHistory(userId);
         return ResponseEntity.status(response.getStatusCode()).body(response);
     }

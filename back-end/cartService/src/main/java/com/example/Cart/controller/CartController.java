@@ -19,8 +19,8 @@ public class CartController {
     @Autowired
     private CartService cartService;
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<CommonResponse<CartDto>> getCart(@PathVariable Long userId) {
+    @GetMapping("/getCart")
+    public ResponseEntity<CommonResponse<CartDto>> getCart(@RequestParam Long userId) {
         return ResponseEntity.ok(cartService.getCartByUserId(userId));
     }
 
@@ -32,23 +32,23 @@ public class CartController {
         return ResponseEntity.ok(cartService.addItemToCart(userId, itemDto));
     }
 
-    @DeleteMapping("/{userId}/items/{itemId}")
-    public ResponseEntity<CommonResponse<String>> removeItem(@PathVariable Long itemId) {
+    @DeleteMapping("/removeCartItem")
+    public ResponseEntity<CommonResponse<String>> removeItem(@RequestParam Long itemId) {
         return ResponseEntity.ok(cartService.removeItemFromCart(itemId));
     }
 
-    @PutMapping("/{userId}/items/{itemId}")
-    public ResponseEntity<CommonResponse<String>> updateItem(@PathVariable Long itemId, @RequestBody CartItemDto itemDto) {
+    @PutMapping("/updateCartItem")
+    public ResponseEntity<CommonResponse<String>> updateItem(@RequestParam Long itemId, @RequestBody CartItemDto itemDto) {
         return ResponseEntity.ok(cartService.updateItemQuantity(itemId, itemDto.getQuantity()));
     }
 
-    @DeleteMapping("/{userId}")
-    public ResponseEntity<CommonResponse<String>> clearCart(@PathVariable Long userId) {
+    @DeleteMapping("/removeCart")
+    public ResponseEntity<CommonResponse<String>> clearCart(@RequestParam Long userId) {
         return ResponseEntity.ok(cartService.clearCart(userId));
     }
 
-    @GetMapping("/checkout/{userId}/{email}")
-    public ResponseEntity<CommonResponse<String>> checkoutCart(@PathVariable Long userId, @PathVariable String email) {
+    @GetMapping("/checkout")
+    public ResponseEntity<CommonResponse<String>> checkoutCart(@RequestParam String email, @RequestParam Long userId) {
         return ResponseEntity.ok(cartService.checkoutCart(userId, email));
     }
 }
