@@ -14,6 +14,9 @@ public interface SearchService {
 
     List<ProductOffering> searchByProductName(String productName);
 
+
+    List<ProductOffering> searchByCategory(String category);
+
     PageImpl<ProductOffering> findByProductNameContaining(String keyword, int page, int size);
 
     ProductOfferingDto create(ProductOfferingDto productOfferingDto);

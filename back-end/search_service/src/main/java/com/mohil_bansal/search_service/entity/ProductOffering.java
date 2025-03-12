@@ -36,6 +36,10 @@ public class ProductOffering {
 
     @Field
     @Indexed()
+    private String productImage;
+
+    @Field
+    @Indexed()
     private int stock;  // Available stock from the seller
 
     @Field
@@ -61,6 +65,14 @@ public class ProductOffering {
     @Field
     @Indexed()
     private double sellerRank;  // Rank of the seller
+
+    public String getProductImage() {
+        return productImage;
+    }
+
+    public void setProductImage(String productImage) {
+        this.productImage = productImage;
+    }
 
     public String getId() {
         return id;

@@ -51,6 +51,16 @@ public class SearchController {
         }
     }
 
+    @GetMapping("/category")
+    public ResponseEntity<CommonResponse<List<ProductOffering>>> searchByCategory(@RequestParam String category) {
+        try {
+            List<ProductOffering> results = searchService.searchByCategory(category);
+            return ResponseEntity.ok(CommonResponse.success(results, 200, "Search results by category"));
+        } catch (Exception e) {
+            return ResponseEntity.ok(CommonResponse.failure("Error during search by category", 500));
+        }
+    }
+
     @PostMapping
     public ResponseEntity<CommonResponse<ProductOfferingDto>> create(@RequestBody ProductOfferingDto productOfferingDto) {
         try {

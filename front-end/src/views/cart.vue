@@ -2,14 +2,12 @@
   <div class="cart-container">
     <h2>Shopping Cart</h2>
 
-    <!-- Loading and Error states -->
     <div v-if="isLoading" class="loading-spinner">Loading cart...</div>
 
     <div v-if="error" class="error-message">
       {{ error }}
     </div>
 
-    <!-- Display cart items -->
     <div v-if="cartItems.length > 0" class="cart-items-grid">
       <div v-for="item in cartItems" :key="item.id" class="product-card">
         <div class="product-image">
@@ -19,7 +17,6 @@
           <h3 class="product-name">{{ item.name }}</h3>
           <p class="product-price">Price: ₹{{ item.price }}</p>
 
-          <!-- Quantity controls -->
           <div class="quantity-controls">
             <button @click="decrementQuantity(item.id)">-</button>
             <span>{{ item.quantity }}</span>
@@ -31,7 +28,6 @@
       </div>
     </div>
 
-    <!-- Empty cart message -->
     <div v-else-if="!isLoading" class="empty-cart">
       <p>Your cart is empty.</p>
       <router-link to="/" class="continue-shopping">Continue Shopping</router-link>
@@ -42,8 +38,9 @@
       <p><strong>Total Price:</strong> ₹{{ totalPrice }}</p>
       <br />
       <button class="clear-cart" @click="handleClearCart">Clear Cart</button><br />
-      <!-- Move the Checkout button below the Clear Cart button -->
-      <router-link to="/checkout" class="checkout-btn">Proceed to Checkout</router-link>
+      <p>{{ userStore }}</p>
+      <!-- <router-link to="`/checkout/${userStore.user.id}`" class="checkout-btn">Proceed to Checkout</router-link> -->
+      <router-link  :to="{ name: 'Checkout', params: { userId: userStore.user.id } }" class="checkout-btn">Proceed to Checkout</router-link>
     </div>
   </div>
 </template>
@@ -51,6 +48,7 @@
 <script>
 import { mapState, mapActions } from 'pinia'
 import { useCartStore } from '@/stores/cartStore'
+import { useUserStore } from '@/stores/userStore'
 
 export default {
   data() {
@@ -66,6 +64,9 @@ export default {
     cartItems() {
       return this.items
     },
+    userStore() {
+            return useUserStore(); 
+        },
   },
 
   methods: {
@@ -92,6 +93,10 @@ export default {
       this.clearCart()
       this.$router.push('/orders')
     },
+
+    formatPrice(price){
+        return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      }
   },
 
   async mounted() {

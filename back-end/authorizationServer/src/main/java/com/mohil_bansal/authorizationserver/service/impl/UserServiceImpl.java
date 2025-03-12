@@ -11,6 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -18,9 +20,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -177,10 +177,20 @@ public class UserServiceImpl implements UserService {
         return new TokenResponseDto(accessToken, refreshRequest.getRefreshToken());
     }
 
+    //TODO: Update Access Token and Refresh Token
     @Override
     public boolean logout(String token) {
         // Delete refresh token from Redis
-        return Boolean.TRUE.equals(redisTemplate.delete(token));
+        try {
+            String userId = redisTemplate.opsForValue().get(redisTemplate.opsForValue().get(token));
+
+            return Boolean.TRUE.equals(redisTemplate.delete(token));
+
+        } catch (Exception e) {
+//            log.error("Error while deleting token from redis: {}", e.getMessage());
+            return false;
+        }
+
     }
 
     @Override
@@ -191,5 +201,21 @@ public class UserServiceImpl implements UserService {
         Long userId = Long.parseLong(jwtTokenUtil.getUserIdFromToken(token));
         userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return true;
+    }
+
+    @Override
+    public AuthorizationDto checkAuthorization(String token) {
+        try {
+            if (!jwtTokenUtil.validateToken(token)) {
+                return new AuthorizationDto(null, false);
+            }
+            String userId = jwtTokenUtil.getUserIdFromToken(token);
+            userRepository.findById(Long.parseLong(userId))
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+            return new AuthorizationDto(userId, true);
+        } catch (Exception e) {
+//            log.error("Error checking authorization: {}", e.getMessage());
+            return new AuthorizationDto(null, false);
+        }
     }
 }

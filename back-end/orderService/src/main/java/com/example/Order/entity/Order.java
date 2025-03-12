@@ -24,7 +24,7 @@ public class Order {
     @Column(name = "product_offering_id", nullable = false)
     private Long productOfferingId;
 
-    @Column(name = "Product Name")
+    @Column(name = "Product_Name")
     private String productOfferingName;
 
     @Column(name = "Image")
