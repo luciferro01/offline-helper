@@ -184,13 +184,12 @@ public class SellerServiceImpl implements SellerService {
         searchProductOfferingDto.setSellerName(offering.getSellerName());
         searchProductOfferingDto.setPrice(offering.getPrice());
         searchProductOfferingDto.setStock(offering.getStock());
-        log.info("Seller rating {}",seller.getRating());
         searchProductOfferingDto.setSellerRating((seller.getRating()== null ? 0 : seller.getRating() ));
-        log.info("Seller rating {}",seller.getRating());
         searchProductOfferingDto.setTotalProductsOffered(totalProductsOffered);
         searchProductOfferingDto.setProductsSoldCount(seller.getTotalSold());
         searchProductOfferingDto.setProductReviews(offering.getSold());
         searchProductOfferingDto.setCategory(productDetails.getCategoryName());
+        searchProductOfferingDto.setProductRating((offering.getRating() == null ? 0 : offering.getRating()));
         String id = offering.getId() + "-" + offering.getProductId();
         searchProductOfferingDto.setId(id);
 
@@ -267,11 +266,12 @@ public class SellerServiceImpl implements SellerService {
         searchProductOfferingDto.setSellerName(offering.getSellerName());
         searchProductOfferingDto.setPrice(offering.getPrice());
         searchProductOfferingDto.setStock(offering.getStock());
-        searchProductOfferingDto.setSellerRating(seller.getRating());
+        searchProductOfferingDto.setSellerRating((seller.getRating()== null ? 0 : seller.getRating() ));
         searchProductOfferingDto.setTotalProductsOffered(totalProductsOffered);
         searchProductOfferingDto.setProductsSoldCount(seller.getTotalSold());
         searchProductOfferingDto.setProductReviews(0);
         searchProductOfferingDto.setCategory(productDetails.getCategoryName());
+        searchProductOfferingDto.setProductRating((offering.getRating() == null ? 0 : offering.getRating()));
         String id = offering.getId() + "-" + offering.getProductId();
         searchProductOfferingDto.setId(id);
 

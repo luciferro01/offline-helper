@@ -1,11 +1,8 @@
 package com.mohil_bansal.search_service.dto;
 
+import lombok.Data;
 
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-
-@AllArgsConstructor
-@NoArgsConstructor
+@Data
 public class ProductOfferingDto {
     private String id;
     private String productOfferingId;  // Unique ID for this product offering
@@ -18,26 +15,9 @@ public class ProductOfferingDto {
     private double sellerRating;  // Seller's rating (out of 5)
     private int productsSoldCount;  // Number of products sold by the seller
     private int totalProductsOffered;  // Total number of different products offered by the seller
-    private int productReviews;  // (New -- Avg. Rating for that product) (Old -- Number of customer reviews for the product)
+    private int productReviews;  // Number of customer reviews for the product
     private String category;  // Category of the product (e.g., "Smartphones")
-
-    private String productImage;
-
-    public String getProductImage() {
-        return productImage;
-    }
-
-    public void setProductImage(String productImage) {
-        this.productImage = productImage;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
+    private double productRating;
 
     // Getters and Setters
     public String getProductOfferingId() {
@@ -134,5 +114,21 @@ public class ProductOfferingDto {
 
     public void setCategory(String category) {
         this.category = category;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public double getProductRating() {
+        return productRating;
+    }
+
+    public void setProductRating(double productRating) {
+        this.productRating = productRating;
     }
 }

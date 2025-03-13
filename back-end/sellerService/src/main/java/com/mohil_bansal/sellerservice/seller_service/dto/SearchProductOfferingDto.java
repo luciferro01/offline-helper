@@ -18,6 +18,7 @@ public class SearchProductOfferingDto {
     private int totalProductsOffered;  // Total number of different products offered by the seller
     private int productReviews;  // Number of customer reviews for the product
     private String category;  // Category of the product (e.g., "Smartphones")
+    private double productRating;
 
     // Getters and Setters
     public String getProductOfferingId() {
@@ -114,5 +115,21 @@ public class SearchProductOfferingDto {
 
     public void setCategory(String category) {
         this.category = category;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public double getProductRating() {
+        return productRating;
+    }
+
+    public void setProductRating(double productRating) {
+        this.productRating = productRating;
     }
 }
