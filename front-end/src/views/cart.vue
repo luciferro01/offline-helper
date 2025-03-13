@@ -2,12 +2,14 @@
   <div class="cart-container">
     <h2>Shopping Cart</h2>
 
+    <!-- Loading and Error states -->
     <div v-if="isLoading" class="loading-spinner">Loading cart...</div>
 
     <div v-if="error" class="error-message">
       {{ error }}
     </div>
 
+    <!-- Display cart items -->
     <div v-if="cartItems.length > 0" class="cart-items-grid">
       <div v-for="item in cartItems" :key="item.id" class="product-card">
         <div class="product-image">
@@ -17,17 +19,19 @@
           <h3 class="product-name">{{ item.name }}</h3>
           <p class="product-price">Price: ₹{{ item.price }}</p>
 
+          <!-- Quantity controls -->
           <div class="quantity-controls">
-            <button @click="decrementQuantity(item.id)">-</button>
+            <button @click="decrementQuantity(item.id)" :disabled="item.quantity <= 1">-</button>
             <span>{{ item.quantity }}</span>
             <button @click="incrementQuantity(item.id)">+</button>
           </div>
 
-          <button class="remove-btn" @click="removeFromCart(item.id)">Remove</button>
+          <button class="remove-btn" @click="removeItem(item.id)">Remove</button>
         </div>
       </div>
     </div>
 
+    <!-- Empty cart message -->
     <div v-else-if="!isLoading" class="empty-cart">
       <p>Your cart is empty.</p>
       <router-link to="/" class="continue-shopping">Continue Shopping</router-link>
@@ -38,9 +42,8 @@
       <p><strong>Total Price:</strong> ₹{{ totalPrice }}</p>
       <br />
       <button class="clear-cart" @click="handleClearCart">Clear Cart</button><br />
-      <p>{{ userStore }}</p>
-      <!-- <router-link to="`/checkout/${userStore.user.id}`" class="checkout-btn">Proceed to Checkout</router-link> -->
-      <router-link  :to="{ name: 'Checkout', params: { userId: userStore.user.id } }" class="checkout-btn">Proceed to Checkout</router-link>
+      <!-- Move the Checkout button below the Clear Cart button -->
+      <router-link to="/checkout" class="checkout-btn">Proceed to Checkout</router-link>
     </div>
   </div>
 </template>
@@ -48,7 +51,6 @@
 <script>
 import { mapState, mapActions } from 'pinia'
 import { useCartStore } from '@/stores/cartStore'
-import { useUserStore } from '@/stores/userStore'
 
 export default {
   data() {
@@ -64,28 +66,30 @@ export default {
     cartItems() {
       return this.items
     },
-    userStore() {
-            return useUserStore(); 
-        },
   },
 
   methods: {
     ...mapActions(useCartStore, ['fetchCart', 'updateQuantity', 'removeFromCart', 'clearCart']),
 
     // Increment quantity of item
-    incrementQuantity(productId) {
-      const item = this.cartItems.find((item) => item.id === productId)
+    incrementQuantity(itemId) {
+      const item = this.cartItems.find((item) => item.id === itemId)
       if (item) {
-        this.updateQuantity(productId, item.quantity + 1)
+        this.updateQuantity(itemId, item.quantity + 1)
       }
     },
 
     // Decrement quantity of item
-    decrementQuantity(productId) {
-      const item = this.cartItems.find((item) => item.id === productId)
-      if (item) {
-        this.updateQuantity(productId, item.quantity - 1)
+    decrementQuantity(itemId) {
+      const item = this.cartItems.find((item) => item.id === itemId)
+      if (item && item.quantity > 1) {
+        this.updateQuantity(itemId, item.quantity - 1)
       }
+    },
+
+    // Remove item from cart
+    removeItem(itemId) {
+      this.removeFromCart(itemId)
     },
 
     // Clear the entire cart and redirect to orders page
@@ -93,48 +97,12 @@ export default {
       this.clearCart()
       this.$router.push('/orders')
     },
-
-    formatPrice(price){
-        return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-      }
   },
 
   async mounted() {
     this.isLoading = true
-    // this.fetchCart()
     try {
       await this.fetchCart()
-
-      // If cart is empty and you want mock data for testing
-      // if (this.cartItems.length === 0) {
-      //     // Mock data for testing
-      //     // const mockData = [
-      //     //   {
-      //     //     id: 1,
-      //     //     name: "iPhone 15 Pro Max",
-      //     //     price: 149999,
-      //     //     quantity: 1,
-      //     //     image: "https://m.media-amazon.com/images/I/81CgtwSII3L._AC_UL480_FMwebp_QL65_.jpg"
-      //     //   },
-      //     //   {
-      //     //     id: 2,
-      //     //     name: "AirPods Pro (2nd Gen)",
-      //     //     price: 24999,
-      //     //     quantity: 2,
-      //     //     image: "https://m.media-amazon.com/images/I/61SUj2aKoEL._AC_UL480_FMwebp_QL65_.jpg"
-      //     //   },
-      //     //   {
-      //     //     id: 3,
-      //     //     name: "MacBook Pro M2",
-      //     //     price: 189999,
-      //     //     quantity: 1,
-      //     //     image: "https://m.media-amazon.com/images/I/71-Vbp1LkgL._AC_UL480_FMwebp_QL65_.jpg"
-      //     //   }
-      //     // ];
-      //     // Comment this out when connecting to a real backend
-      //     // this.$pinia.state.value.cart.items = mockData;
-      //     // useCartStore().saveCart();
-      //   }
     } catch (err) {
       this.error = err.message
     } finally {
@@ -160,7 +128,7 @@ h2 {
 
 .cart-items-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 15px;
   margin-top: 20px;
   overflow-y: auto;
@@ -242,6 +210,11 @@ h2 {
 
 .quantity-controls button:hover {
   background-color: #0056b3;
+}
+
+.quantity-controls button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
 }
 
 .remove-btn {
