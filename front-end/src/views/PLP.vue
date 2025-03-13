@@ -1,36 +1,73 @@
 <template>
   <div class="search-results-page">
-    <h2>Search Results</h2>
+    <h2 class="search-title">
+      {{ searchQuery ? `Search results for "${searchQuery}"` : 'All Products' }}
+    </h2>
 
-    <!-- Loading indicator -->
-    <div v-if="loading" class="loading-indicator">
-      <div class="spinner"></div>
-      <p>Searching products...</p>
+    <div v-if="productStore.loading">
+      <div class="loading-indicator">
+        <div class="spinner"></div>
+        <p>Searching products...</p>
+      </div>
     </div>
 
-    <!-- Error message -->
-    <div v-else-if="error" class="error-message">
-      <p>{{ error }}</p>
+    <div v-else-if="productStore.error" class="error-message">
+      <p>{{ productStore.error }}</p>
       <button @click="retrySearch" class="retry-button">Try Again</button>
     </div>
 
-    <!-- Display products using ProductCard -->
-    <div v-else-if="searchResults.length > 0" class="products-grid">
-      <ProductCard v-for="product in searchResults" :key="product.id" :product="product" />
+    <div v-else-if="paginatedProducts.length > 0" class="products-grid">
+      <ProductCard v-for="product in paginatedProducts" :key="product.id" :product="product" />
     </div>
 
-    <!-- Display message if no products are found -->
     <div v-else class="empty-products">
       <p>No products found matching your search.</p>
+      <p class="suggestion">Try different search terms.</p>
+    </div>
+
+    <!-- Pagination Controls -->
+    <div v-if="productStore.totalItems > 0" class="pagination">
+      <button
+        :disabled="productStore.currentPage === 1"
+        @click="productStore.prevPage()"
+        class="pagination-button"
+      >
+        Previous
+      </button>
+
+      <!-- Display page numbers -->
+      <button
+        v-for="page in displayedPageNumbers"
+        :key="page"
+        @click="typeof page === 'number' ? productStore.setPage(page) : null"
+        :class="{ active: page === productStore.currentPage, ellipsis: page === '...' }"
+        class="pagination-button"
+        :disabled="page === '...'"
+      >
+        {{ page }}
+      </button>
+
+      <button
+        :disabled="productStore.currentPage === productStore.totalPages"
+        @click="productStore.nextPage()"
+        class="pagination-button"
+      >
+        Next
+      </button>
+    </div>
+
+    <!-- Search Metadata -->
+    <div v-if="paginatedProducts.length > 0" class="search-metadata">
+      <p>Showing {{ paginationInfo }}</p>
     </div>
   </div>
 </template>
 
 <script>
 import { useRoute, useRouter } from 'vue-router'
-import { ref, watch, computed, onMounted } from 'vue'
-import { useProductStore } from '@/stores/productStore' // Import productStore
+import { ref, onMounted, watch, computed } from 'vue'
 import ProductCard from '@/components/product-card.vue'
+import { useProductStore } from '@/stores/productStore' // Import ProductStore
 
 export default {
   name: 'SearchResults',
@@ -40,41 +77,47 @@ export default {
   setup() {
     const route = useRoute()
     const router = useRouter()
-    const searchQuery = ref(' ')
-
-    // Use the productStore directly
     const productStore = useProductStore()
 
-    // Computed properties from the store
-    const searchResults = computed(() => productStore.allProducts)
-    const loading = computed(() => productStore.loading)
-    const error = computed(() => productStore.error)
+    const searchQuery = ref('')
+
+    // Initialize from URL parameters
+    onMounted(() => {
+      if (route.query.q) {
+        searchQuery.value = route.query.q
+        performSearch()
+      } else {
+        // If no search query, you can choose to show all products or redirect
+        productStore.fetchProducts()
+      }
+    })
 
     // Watch for query parameter changes in the URL
     watch(
       () => route.query.q,
-      async (newQuery) => {
-        if (newQuery) {
-          searchQuery.value = newQuery
-          await performSearch(newQuery)
-        } else {
-          // If no query, reset and redirect to home
-          productStore.allProducts = []
-          router.push('/')
+      (newQuery) => {
+        if (newQuery !== undefined) {
+          searchQuery.value = newQuery || ''
+          performSearch()
+        }
+        if (newQuery === '') {
+          router.push('/') // Redirect to homepage if search query is empty
         }
       },
-      { immediate: true },
     )
 
-    // Search function that calls the store's searchProducts action
-    const performSearch = async (query) => {
-      if (!query || query.trim() === '') {
-        productStore.allProducts = []
+    // Function to perform search with current page and items per page
+    const performSearch = async () => {
+      if (!searchQuery.value || searchQuery.value.trim() === '') {
         return
       }
 
       try {
-        await productStore.searchProducts(query)
+        await productStore.searchProducts(
+          searchQuery.value,
+          productStore.currentPage,
+          productStore.itemsPerPage,
+        )
       } catch (err) {
         console.error('Error searching products:', err)
       }
@@ -83,28 +126,60 @@ export default {
     // Retry search if there was an error
     const retrySearch = () => {
       productStore.clearError()
-      performSearch(searchQuery.value)
+      performSearch()
     }
 
-    // Format price with commas (helper function)
-    const formatPrice = (price) => {
-      return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-    }
+    // Get paginated products from store
+    const paginatedProducts = computed(() => {
+      return productStore.paginatedProducts
+    })
 
-    onMounted(() => {
-      // If there's a query in the URL, perform search on mount
-      if (route.query.q) {
-        searchQuery.value = route.query.q
-        performSearch(searchQuery.value)
+    // Pagination info
+    const paginationInfo = computed(() => {
+      const start = (productStore.currentPage - 1) * productStore.itemsPerPage + 1
+      const end = Math.min(start + productStore.itemsPerPage - 1, productStore.totalItems)
+      return `${start}-${end} of ${productStore.totalItems} products`
+    })
+
+    // Compute a limited set of page numbers to display for better UI
+    const displayedPageNumbers = computed(() => {
+      const totalPages = productStore.totalPages
+      const currentPage = productStore.currentPage
+
+      if (totalPages <= 7) {
+        // If fewer than 7 pages, show all
+        return Array.from({ length: totalPages }, (_, i) => i + 1)
       }
+
+      if (currentPage <= 4) {
+        // If near the beginning, show first 5 pages + ellipsis + last page
+        return [1, 2, 3, 4, 5, '...', totalPages]
+      }
+
+      if (currentPage >= totalPages - 3) {
+        // If near the end, show first page + ellipsis + last 5 pages
+        return [
+          1,
+          '...',
+          totalPages - 4,
+          totalPages - 3,
+          totalPages - 2,
+          totalPages - 1,
+          totalPages,
+        ]
+      }
+
+      // If in the middle, show first page + ellipsis + 3 pages around current + ellipsis + last page
+      return [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages]
     })
 
     return {
+      router,
+      productStore,
       searchQuery,
-      searchResults,
-      loading,
-      error,
-      formatPrice,
+      paginatedProducts,
+      displayedPageNumbers,
+      paginationInfo,
       retrySearch,
     }
   },
@@ -117,10 +192,17 @@ export default {
   font-family: 'Roboto', Arial, sans-serif;
 }
 
+.search-title {
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 1.5rem;
+}
+
 .products-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 20px;
+  margin-bottom: 30px;
 }
 
 .loading-indicator {
@@ -182,5 +264,60 @@ export default {
   background-color: #f9f9f9;
   border-radius: 8px;
   color: #666;
+}
+
+.suggestion {
+  font-size: 0.9rem;
+  margin-top: 10px;
+  color: #888;
+}
+
+.search-metadata {
+  text-align: center;
+  color: #666;
+  font-size: 0.9rem;
+  margin-top: 20px;
+}
+
+/* Pagination Styles */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.pagination-button {
+  padding: 8px 12px;
+  margin: 0 5px;
+  border: 1px solid #ddd;
+  background-color: #fff;
+  color: #333;
+  cursor: pointer;
+  border-radius: 4px;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+.pagination-button:hover:enabled {
+  background-color: #f0f0f0;
+}
+
+.pagination-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-button.active {
+  background-color: #0095da;
+  color: white;
+  border-color: #0095da;
+}
+
+.pagination-button.ellipsis {
+  border: none;
+  padding: 8px 6px;
+  background: transparent;
 }
 </style>
