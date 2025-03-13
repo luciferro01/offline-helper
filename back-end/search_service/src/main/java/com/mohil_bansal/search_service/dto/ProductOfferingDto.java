@@ -2,6 +2,13 @@ package com.mohil_bansal.search_service.dto;
 
 import lombok.Data;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
 @Data
 public class ProductOfferingDto {
     private String id;
@@ -15,117 +22,66 @@ public class ProductOfferingDto {
     private double sellerRating;  // Seller's rating (out of 5)
     private int productsSoldCount;  // Number of products sold by the seller
     private int totalProductsOffered;  // Total number of different products offered by the seller
-    private int productReviews;  // Number of customer reviews for the product
+    private int productReviews;  // (MisInterpret) Current -> (Old -- Number of customer reviews for the product) ((New -- Avg. Rating for that product))
     private String category;  // Category of the product (e.g., "Smartphones")
+
+    private String productImage;
     private double productRating;
 
-    // Getters and Setters
-    public String getProductOfferingId() {
-        return productOfferingId;
+    public void setId(String id) {
+        this.id = id;
     }
 
     public void setProductOfferingId(String productOfferingId) {
         this.productOfferingId = productOfferingId;
     }
 
-    public Long getProductId() {
-        return productId;
-    }
-
     public void setProductId(Long productId) {
         this.productId = productId;
-    }
-
-    public String getProductName() {
-        return productName;
     }
 
     public void setProductName(String productName) {
         this.productName = productName;
     }
 
-    public Long getSellerId() {
-        return sellerId;
-    }
-
     public void setSellerId(Long sellerId) {
         this.sellerId = sellerId;
-    }
-
-    public String getSellerName() {
-        return sellerName;
     }
 
     public void setSellerName(String sellerName) {
         this.sellerName = sellerName;
     }
 
-    public double getPrice() {
-        return price;
-    }
-
     public void setPrice(double price) {
         this.price = price;
-    }
-
-    public int getStock() {
-        return stock;
     }
 
     public void setStock(int stock) {
         this.stock = stock;
     }
 
-    public double getSellerRating() {
-        return sellerRating;
-    }
-
     public void setSellerRating(double sellerRating) {
         this.sellerRating = sellerRating;
-    }
-
-    public int getProductsSoldCount() {
-        return productsSoldCount;
     }
 
     public void setProductsSoldCount(int productsSoldCount) {
         this.productsSoldCount = productsSoldCount;
     }
 
-    public int getTotalProductsOffered() {
-        return totalProductsOffered;
-    }
-
     public void setTotalProductsOffered(int totalProductsOffered) {
         this.totalProductsOffered = totalProductsOffered;
-    }
-
-    public int getProductReviews() {
-        return productReviews;
     }
 
     public void setProductReviews(int productReviews) {
         this.productReviews = productReviews;
     }
 
-    public String getCategory() {
-        return category;
-    }
-
     public void setCategory(String category) {
         this.category = category;
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public double getProductRating() {
-        return productRating;
+    public void setProductImage(String productImage) {
+        this.productImage = productImage;
     }
 
     public void setProductRating(double productRating) {

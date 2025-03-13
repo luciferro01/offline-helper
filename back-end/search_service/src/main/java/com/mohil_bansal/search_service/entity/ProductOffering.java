@@ -66,9 +66,22 @@ public class ProductOffering {
     @Indexed()
     private double sellerRank;  // Rank of the seller
 
+    @Field
+    private double productRating;
+
+    public double getProductRating() {
+        return productRating;
+    }
+
+    public void setProductRating(double productRating) {
+        this.productRating = productRating;
+    }
+
     public String getProductImage() {
         return productImage;
     }
+
+
 
     public void setProductImage(String productImage) {
         this.productImage = productImage;
