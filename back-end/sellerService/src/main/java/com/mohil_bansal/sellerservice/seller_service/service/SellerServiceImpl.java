@@ -184,7 +184,9 @@ public class SellerServiceImpl implements SellerService {
         searchProductOfferingDto.setSellerName(offering.getSellerName());
         searchProductOfferingDto.setPrice(offering.getPrice());
         searchProductOfferingDto.setStock(offering.getStock());
-        searchProductOfferingDto.setSellerRating(seller.getRating());
+        log.info("Seller rating {}",seller.getRating());
+        searchProductOfferingDto.setSellerRating((seller.getRating()== null ? 0 : seller.getRating() ));
+        log.info("Seller rating {}",seller.getRating());
         searchProductOfferingDto.setTotalProductsOffered(totalProductsOffered);
         searchProductOfferingDto.setProductsSoldCount(seller.getTotalSold());
         searchProductOfferingDto.setProductReviews(offering.getSold());

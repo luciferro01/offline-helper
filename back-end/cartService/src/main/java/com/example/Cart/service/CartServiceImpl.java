@@ -139,6 +139,7 @@ public class CartServiceImpl implements CartService {
         log.info("Creating order for user id: {}", userId);
 
         CartDto cartDto = convertToDto(cart);
+        log.info("URL is {}",ADD_ORDER_SERVICE_URL+"?userId="+userId);
 
         try {
             ResponseEntity<CommonResponse<String>> responseEntity = restTemplate.exchange( // Use RestTemplate.exchange

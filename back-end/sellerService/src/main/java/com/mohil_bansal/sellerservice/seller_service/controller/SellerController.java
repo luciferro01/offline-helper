@@ -2,6 +2,7 @@ package com.mohil_bansal.sellerservice.seller_service.controller;
 
 
 import com.mohil_bansal.sellerservice.seller_service.dto.ProductOfferingDto;
+import com.mohil_bansal.sellerservice.seller_service.dto.ProductOfferingWrapperDto;
 import com.mohil_bansal.sellerservice.seller_service.dto.SellerDto;
 import com.mohil_bansal.sellerservice.seller_service.service.SellerService;
 import com.mohil_bansal.sellerservice.seller_service.utils.CommonResponse;
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -70,9 +72,24 @@ public class SellerController {
     }
 
     // Add a product offering for a seller
+//    @PostMapping("/{sellerId}/offerings")
+//    public ResponseEntity<CommonResponse<ProductOfferingDto>> addProductOffering(@PathVariable Long sellerId, @RequestBody ProductOfferingDto offeringDto) {
+//        offeringDto.setSellerId(sellerId);
+//        ProductOfferingDto addedOffering = sellerService.addProductOffering(offeringDto);
+//        CommonResponse<ProductOfferingDto> response = CommonResponse.success(addedOffering, 200, "Product offering added successfully");
+//        return ResponseEntity.ok(response);
+//    }
     @PostMapping("/{sellerId}/offerings")
-    public ResponseEntity<CommonResponse<ProductOfferingDto>> addProductOffering(@PathVariable Long sellerId, @RequestBody ProductOfferingDto offeringDto) {
+    public ResponseEntity<CommonResponse<ProductOfferingDto>> addProductOffering(
+            @PathVariable Long sellerId,
+            @Valid @RequestBody ProductOfferingWrapperDto offeringWrapperDto) { // Changed RequestBody type to ProductOfferingWrapperDto
+
+        ProductOfferingDto offeringDto = new ProductOfferingDto(); // Create ProductOfferingDto
         offeringDto.setSellerId(sellerId);
+        offeringDto.setProductId(offeringWrapperDto.getProductId());
+        offeringDto.setPrice(offeringWrapperDto.getPrice());
+        offeringDto.setStock(offeringWrapperDto.getStock());
+
         ProductOfferingDto addedOffering = sellerService.addProductOffering(offeringDto);
         CommonResponse<ProductOfferingDto> response = CommonResponse.success(addedOffering, 200, "Product offering added successfully");
         return ResponseEntity.ok(response);

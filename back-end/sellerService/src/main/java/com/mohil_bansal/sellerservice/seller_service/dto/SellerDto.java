@@ -15,5 +15,5 @@ public class SellerDto {
     private String address;
     private Integer totalStock ;
     private Integer totalSold ;
-    private Double rating;
+    private Double rating=0.0;
 }
