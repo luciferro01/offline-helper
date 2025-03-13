@@ -93,7 +93,7 @@ export const useProductStore = defineStore('product', {
       // Original API code
       try {
         const response = await api.get('/search?query=${this.search}')
-        this.featuredProducts = response.data
+        this.featuredProducts = response.data.data
         this.statusMessage = response.message
         return this.featuredProducts
       } catch (error) {
@@ -114,7 +114,7 @@ export const useProductStore = defineStore('product', {
       // Original API code
       try {
         const response = await api.get(`/products/${productId}`)
-        this.currentProduct = response.data
+        this.currentProduct = response.data.data
         this.statusMessage = response.message
         return this.currentProduct
       } catch (error) {
@@ -183,10 +183,10 @@ export const useProductStore = defineStore('product', {
 
         // Process the response
         // Extract data from the CommonResponse wrapper
-        const commonResponse = response.data || {}
+        const commonResponse = response.data.data || {}
 
         // Extract the PageImpl from the data field of CommonResponse
-        const pageData = commonResponse.data || {}
+        const pageData = commonResponse.data.data || {}
 
         this.allProducts = pageData.content || []
         this.totalItems = pageData.totalElements || this.allProducts.length
@@ -247,7 +247,7 @@ export const useProductStore = defineStore('product', {
       // Original API code
       try {
         const response = await api.get('/products/category/' + categoryId)
-        this.allProducts = response.data
+        this.allProducts = response.data.data
         this.statusMessage = response.message
         return this.allProducts
       } catch (error) {

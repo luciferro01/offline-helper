@@ -14,7 +14,7 @@
             v-for="star in 5"
             :key="star"
             class="star"
-            :class="{ filled: star <= Math.round(product.rating) }"
+            :class="{ filled: star <= Math.round(product.productRating) }"
             >★</span
           >
         </div>
