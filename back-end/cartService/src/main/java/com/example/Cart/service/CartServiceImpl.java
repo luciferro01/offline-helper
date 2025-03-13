@@ -99,7 +99,12 @@ public class CartServiceImpl implements CartService {
         log.info("Updating quantity for item id: {}", itemId);
         CartItem item = cartItemRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Item not found with id: " + itemId));
-        item.setQuantity(quantity);
+        if(quantity <= 0){
+            item.setQuantity(0);
+        }
+        else{
+            item.setQuantity(quantity);
+        }
         cartItemRepository.save(item);
         return CommonResponse.success(null, 200, "Item Quantity Updated");
     }
