@@ -17,4 +17,5 @@ public interface SellerService {
     List<ProductOfferingDto> getProductOfferingsBySeller(Long sellerId);
     ProductOfferingDto addProductOffering(ProductOfferingDto offeringDto);
     ProductOfferingDto updateProductOffering(Long productOfferingId, ProductOfferingDto offeringDto);
+    List<SellerDto> getSellersForProduct(Long productId);
 }

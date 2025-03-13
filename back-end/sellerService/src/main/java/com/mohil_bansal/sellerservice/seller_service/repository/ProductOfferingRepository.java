@@ -10,4 +10,5 @@ import java.util.List;
 public interface ProductOfferingRepository extends JpaRepository<ProductOffering, Long> {
     List<ProductOffering> findBySellerId(Long sellerId);
     boolean existsBySellerIdAndProductId(Long sellerId, Long productId);
+    List<ProductOffering> findByProductId(Long productId);
 }

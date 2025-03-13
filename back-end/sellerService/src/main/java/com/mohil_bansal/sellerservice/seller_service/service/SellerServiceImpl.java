@@ -283,6 +283,23 @@ public class SellerServiceImpl implements SellerService {
         return convertToDto(offering);
     }
 
+    @Override
+    public List<SellerDto> getSellersForProduct(Long productId){
+        log.info("Getting all sellers for Product ID : {}", productId);
+        List<ProductOffering> offerings = productOfferingRepository.findByProductId(productId);
+
+        List<Long> sellerIds = offerings.stream()
+                .map(ProductOffering::getSellerId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        List<Seller> sellers = sellerRepository.findAllById(sellerIds);
+
+        return sellers.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
     private ProductOfferingDto convertToDto(ProductOffering offering) {
         return new ProductOfferingDto(
                 offering.getId(),

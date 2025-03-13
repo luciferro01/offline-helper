@@ -104,4 +104,12 @@ public class SellerController {
         CommonResponse<ProductOfferingDto> response = CommonResponse.success(offering, 200, "Product offering updated successfully");
         return ResponseEntity.ok(response);
     }
+
+    // Get all Sellers for particular productId
+    @GetMapping("/sellersForProduct")
+    public ResponseEntity<CommonResponse<List<SellerDto>>> getSellersForProduct(@RequestParam Long productId){
+        List<SellerDto> sellers = sellerService.getSellersForProduct(productId);
+        CommonResponse<List<SellerDto>> response = CommonResponse.success(sellers, 200, "Sellers fetched successfully");
+        return ResponseEntity.ok(response);
+    }
 }
