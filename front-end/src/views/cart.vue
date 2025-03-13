@@ -13,20 +13,30 @@
     <div v-if="cartItems.length > 0" class="cart-items-grid">
       <div v-for="item in cartItems" :key="item.id" class="product-card">
         <div class="product-image">
-          <img :src="item.image" alt="Product Image" />
+          <img :src="item.image || 'https://via.placeholder.com/150'" alt="Product Image" />
         </div>
         <div class="product-info">
-          <h3 class="product-name">{{ item.name }}</h3>
-          <p class="product-price">Price: ₹{{ item.price }}</p>
+          <h3 class="product-name">{{ item.productName || 'Product' }}</h3>
+          <p class="product-price">Price: ₹{{ formatPrice(item.price) }}</p>
 
           <!-- Quantity controls -->
           <div class="quantity-controls">
-            <button @click="decrementQuantity(item.id)" :disabled="item.quantity <= 1">-</button>
-            <span>{{ item.quantity }}</span>
-            <button @click="incrementQuantity(item.id)">+</button>
+            <button
+              @click="decrementQuantity(item)"
+              :disabled="isUpdating || item.quantity <= 1"
+              class="quantity-btn"
+            >
+              -
+            </button>
+            <span class="quantity-value">{{ item.quantity }}</span>
+            <button @click="incrementQuantity(item)" :disabled="isUpdating" class="quantity-btn">
+              +
+            </button>
           </div>
 
-          <button class="remove-btn" @click="removeItem(item.id)">Remove</button>
+          <button class="remove-btn" @click="removeItem(item)" :disabled="isUpdating">
+            Remove
+          </button>
         </div>
       </div>
     </div>
@@ -39,20 +49,52 @@
 
     <div v-if="cartItems.length > 0" class="cart-summary">
       <p><strong>Total Items:</strong> {{ totalItems }}</p>
-      <p><strong>Total Price:</strong> ₹{{ totalPrice }}</p>
+      <p><strong>Total Price:</strong> ₹{{ formatPrice(totalPrice) }}</p>
       <br />
-      <button class="clear-cart" @click="handleClearCart">Clear Cart</button><br />
+      <button class="clear-cart" @click="handleClearCart" :disabled="isUpdating">Clear Cart</button
+      ><br />
       <!-- Move the Checkout button below the Clear Cart button -->
       <router-link to="/checkout" class="checkout-btn">Proceed to Checkout</router-link>
     </div>
+
+    <!-- Debug panel - remove in production -->
+    <div v-if="showDebug" class="debug-panel">
+      <h3>Debug Information</h3>
+      <button @click="toggleDebug" class="debug-toggle">Hide Debug</button>
+      <pre>{{ JSON.stringify(cartItems, null, 2) }}</pre>
+    </div>
+    <button v-else @click="toggleDebug" class="debug-toggle">Show Debug</button>
   </div>
 </template>
 
 <script>
 import { mapState, mapActions } from 'pinia'
 import { useCartStore } from '@/stores/cartStore'
+import { ref } from 'vue'
 
 export default {
+  setup() {
+    const isUpdating = ref(false)
+    const showDebug = ref(false)
+
+    const toggleDebug = () => {
+      showDebug.value = !showDebug.value
+    }
+
+    // Format price with commas for thousands
+    const formatPrice = (price) => {
+      if (!price) return '0'
+      return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+    }
+
+    return {
+      isUpdating,
+      showDebug,
+      toggleDebug,
+      formatPrice,
+    }
+  },
+
   data() {
     return {
       isLoading: false,
@@ -72,30 +114,67 @@ export default {
     ...mapActions(useCartStore, ['fetchCart', 'updateQuantity', 'removeFromCart', 'clearCart']),
 
     // Increment quantity of item
-    incrementQuantity(itemId) {
-      const item = this.cartItems.find((item) => item.id === itemId)
-      if (item) {
-        this.updateQuantity(itemId, item.quantity + 1)
+    async incrementQuantity(item) {
+      try {
+        this.isUpdating = true
+        console.log(`Incrementing item ID: ${item.id}, Current quantity: ${item.quantity}`)
+
+        // Make sure we're using the cart item's ID, not the product offering ID
+        await this.updateQuantity(item.id, item.quantity + 1)
+      } catch (error) {
+        console.error('Error incrementing quantity:', error)
+        this.error = error.message || 'Failed to update quantity'
+      } finally {
+        this.isUpdating = false
       }
     },
 
     // Decrement quantity of item
-    decrementQuantity(itemId) {
-      const item = this.cartItems.find((item) => item.id === itemId)
-      if (item && item.quantity > 1) {
-        this.updateQuantity(itemId, item.quantity - 1)
+    async decrementQuantity(item) {
+      if (item.quantity <= 1) return
+
+      try {
+        this.isUpdating = true
+        console.log(`Decrementing item ID: ${item.id}, Current quantity: ${item.quantity}`)
+
+        // Make sure we're using the cart item's ID, not the product offering ID
+        await this.updateQuantity(item.id, item.quantity - 1)
+      } catch (error) {
+        console.error('Error decrementing quantity:', error)
+        this.error = error.message || 'Failed to update quantity'
+      } finally {
+        this.isUpdating = false
       }
     },
 
     // Remove item from cart
-    removeItem(itemId) {
-      this.removeFromCart(itemId)
+    async removeItem(item) {
+      try {
+        this.isUpdating = true
+        console.log(`Removing item ID: ${item.id}`)
+
+        // Make sure we're using the cart item's ID, not the product offering ID
+        await this.removeFromCart(item.id)
+      } catch (error) {
+        console.error('Error removing item:', error)
+        this.error = error.message || 'Failed to remove item'
+      } finally {
+        this.isUpdating = false
+      }
     },
 
     // Clear the entire cart and redirect to orders page
-    handleClearCart() {
-      this.clearCart()
-      this.$router.push('/orders')
+    async handleClearCart() {
+      try {
+        this.isUpdating = true
+        await this.clearCart()
+        this.$router.push('/orders')
+      } catch (error) {
+        console.error('Error clearing cart:', error)
+        this.error = error.message || 'Failed to clear cart'
+      } finally {
+        this.isUpdating = false
+      }
     },
   },
 
@@ -103,8 +182,10 @@ export default {
     this.isLoading = true
     try {
       await this.fetchCart()
+      console.log('Cart fetched successfully:', this.cartItems)
     } catch (err) {
-      this.error = err.message
+      console.error('Error fetching cart:', err)
+      this.error = err.message || 'Failed to load cart'
     } finally {
       this.isLoading = false
     }
@@ -124,12 +205,13 @@ export default {
 
 h2 {
   text-align: center;
+  margin-bottom: 20px;
 }
 
 .cart-items-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 15px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
   margin-top: 20px;
   overflow-y: auto;
   max-height: 600px;
@@ -143,7 +225,6 @@ h2 {
   border: 1px solid #f0f0f0;
   display: flex;
   flex-direction: column;
-  cursor: pointer;
   transition:
     transform 0.2s,
     box-shadow 0.2s;
@@ -172,94 +253,132 @@ h2 {
 }
 
 .product-info {
-  padding: 12px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
 }
 
 .product-name {
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: bold;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
   color: #333;
 }
 
 .product-price {
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: bold;
   color: #0095da;
-  margin-bottom: 0.3rem;
+  margin-bottom: 1rem;
 }
 
 .quantity-controls {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 12px;
+  margin: 15px 0;
 }
 
-.quantity-controls button {
-  padding: 5px 10px;
+.quantity-btn {
+  width: 32px;
+  height: 32px;
   background-color: #007bff;
   color: white;
   border: none;
   border-radius: 4px;
+  font-size: 16px;
+  font-weight: bold;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
 }
 
-.quantity-controls button:hover {
+.quantity-btn:hover:not(:disabled) {
   background-color: #0056b3;
 }
 
-.quantity-controls button:disabled {
+.quantity-btn:disabled {
   background-color: #cccccc;
   cursor: not-allowed;
+}
+
+.quantity-value {
+  min-width: 30px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: bold;
 }
 
 .remove-btn {
   background-color: #dc3545;
   color: white;
   border: none;
-  padding: 5px 10px;
+  padding: 8px 12px;
   cursor: pointer;
   border-radius: 4px;
   margin-top: 10px;
+  transition: background-color 0.2s;
+  font-weight: bold;
 }
 
-.remove-btn:hover {
+.remove-btn:hover:not(:disabled) {
   background-color: #b02a37;
 }
 
+.remove-btn:disabled {
+  background-color: #e9a8af;
+  cursor: not-allowed;
+}
+
 .cart-summary {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
   text-align: center;
-  margin-top: 20px;
-  font-size: 1.1rem;
+  margin-top: 30px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.cart-summary p {
+  font-size: 1.2rem;
+  margin: 10px 0;
 }
 
 .clear-cart {
   background-color: #007bff;
   color: white;
-  padding: 8px;
+  padding: 10px 20px;
   border: none;
   cursor: pointer;
   border-radius: 4px;
+  font-weight: bold;
+  transition: background-color 0.2s;
 }
 
-.clear-cart:hover {
+.clear-cart:hover:not(:disabled) {
   background-color: #0056b3;
+}
+
+.clear-cart:disabled {
+  background-color: #a6c5e9;
+  cursor: not-allowed;
 }
 
 .checkout-btn {
   background-color: #28a745;
   color: white;
-  padding: 8px;
-  margin-top: 10px;
+  padding: 10px 20px;
+  margin-top: 15px;
   border: none;
   cursor: pointer;
   border-radius: 4px;
   text-decoration: none;
   display: inline-block;
+  font-weight: bold;
+  transition: background-color 0.2s;
 }
 
 .checkout-btn:hover {
@@ -270,16 +389,22 @@ h2 {
   text-align: center;
   font-size: 18px;
   margin-top: 50px;
+  background-color: #f8f9fa;
+  padding: 40px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .continue-shopping {
   display: inline-block;
-  margin-top: 10px;
-  padding: 8px 12px;
+  margin-top: 20px;
+  padding: 10px 20px;
   background-color: #28a745;
   color: white;
   text-decoration: none;
   border-radius: 5px;
+  font-weight: bold;
+  transition: background-color 0.2s;
 }
 
 .continue-shopping:hover {
@@ -289,7 +414,7 @@ h2 {
 /* Loading and error styles */
 .loading-spinner {
   text-align: center;
-  padding: 30px;
+  padding: 40px;
   font-size: 18px;
   color: #007bff;
 }
@@ -301,5 +426,38 @@ h2 {
   border-radius: 5px;
   margin: 20px 0;
   text-align: center;
+}
+
+/* Debug panel */
+.debug-panel {
+  margin-top: 30px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.debug-panel pre {
+  background-color: #eee;
+  padding: 10px;
+  border-radius: 4px;
+  overflow-x: auto;
+  max-height: 300px;
+}
+
+.debug-toggle {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+@media (max-width: 768px) {
+  .cart-items-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

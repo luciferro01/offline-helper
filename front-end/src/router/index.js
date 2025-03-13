@@ -56,15 +56,15 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
-    path: '/checkout/:userId',
+    path: '/checkout',
     name: 'Checkout',
     component: checkout,
     meta: { requiresAuth: true },
   },
   {
-    path: '/review/:product_offering_id/:user_id',
+    path: '/review/:product_offering_id',
     name: 'Review',
-    component: review
+    component: review,
   },
   {
     path: '/:pathMatch(.*)*',

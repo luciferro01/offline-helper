@@ -33,20 +33,41 @@ export const useCartStore = defineStore('cart', {
     async fetchCart() {
       this.loading = true
       this.error = null
-
       try {
         const userStore = useUserStore()
-
         // Check if user is logged in
         if (!userStore.loggedIn) {
           throw new Error('User not authenticated')
         }
 
-        // Token will be automatically added by the api interceptor
-        const response = await api.get('/carts/getCart')
+        // Get the user ID - Make sure you have this in your userStore
+        const userId = userStore.user?.id || userStore.userId
+        if (!userId) {
+          throw new Error('User ID not found')
+        }
 
-        // Handle the data structure based on your API response
-        this.cartItems = response.data.data || []
+        // Token will be automatically added by the api interceptor
+        // Add userId as a query parameter
+        const response = await api.get(`/carts/getCart?userId=${userId}`)
+        console.log('Response:', response)
+
+        // Extract the items array from the nested structure
+        const cartData = response.data.data
+
+        // Check if cartData contains the items array
+        if (cartData && Array.isArray(cartData.items)) {
+          // Set the cartItems state property (not the getter)
+          this.cartItems = cartData.items.map((item) => ({
+            ...item,
+            // Fix the image URL if needed
+            image: item.productImageUrl ? item.productImageUrl.replace(/"/g, '') : '',
+          }))
+
+          console.log('Cart Items set:', this.cartItems)
+        } else {
+          console.error('No items array found in cart data')
+          this.cartItems = [] // Update cartItems state, not the items getter
+        }
 
         return { success: true }
       } catch (error) {
@@ -70,11 +91,17 @@ export const useCartStore = defineStore('cart', {
           throw new Error('Please sign in to add items to cart')
         }
 
+        // Get the user ID
+        const userId = userStore.user?.id || userStore.userId
+        if (!userId) {
+          throw new Error('User ID not found')
+        }
+
         // The JWT token will be added in the header by the interceptor
-        await api.post('/carts/items', {
-          productOfferingId,
-          quantity,
-        })
+        // Changed to match the backend endpoint and parameters
+        await api.post(
+          `/carts/addToCart?userId=${userId}&productOfferingId=${productOfferingId}&quantity=${quantity}`,
+        )
 
         // Update local cart with response
         await this.fetchCart()
@@ -102,7 +129,8 @@ export const useCartStore = defineStore('cart', {
         }
 
         // The JWT token will be added in the header by the interceptor
-        await api.put(`/carts/items/${itemId}`, {
+        // Changed to match the backend endpoint and parameters
+        await api.put(`/carts/updateCartItem?itemId=${itemId}`, {
           quantity,
         })
 
@@ -132,7 +160,8 @@ export const useCartStore = defineStore('cart', {
         }
 
         // The JWT token will be added in the header by the interceptor
-        await api.delete(`/carts/items/${itemId}`)
+        // Changed to match the backend endpoint
+        await api.delete(`/carts/removeCartItem?itemId=${itemId}`)
 
         // Refresh cart
         await this.fetchCart()
@@ -159,8 +188,15 @@ export const useCartStore = defineStore('cart', {
           throw new Error('User not authenticated')
         }
 
+        // Get the user ID
+        const userId = userStore.user?.id || userStore.userId
+        if (!userId) {
+          throw new Error('User ID not found')
+        }
+
         // The JWT token will be added in the header by the interceptor
-        await api.delete('/carts')
+        // Changed to match the backend endpoint
+        await api.delete(`/carts/removeCart?userId=${userId}`)
 
         // Reset local cart state
         this.cartItems = []
@@ -168,6 +204,41 @@ export const useCartStore = defineStore('cart', {
         return { success: true }
       } catch (error) {
         console.error('Error clearing cart:', error)
+        this.error = error.message
+        return { success: false, error: this.error }
+      } finally {
+        this.loading = false
+      }
+    },
+
+    // Add a checkout method to match backend
+    async checkout(email) {
+      this.loading = true
+      this.error = null
+
+      try {
+        const userStore = useUserStore()
+
+        // Check if user is logged in
+        if (!userStore.loggedIn) {
+          throw new Error('User not authenticated')
+        }
+
+        // Get the user ID
+        const userId = userStore.user?.id || userStore.userId
+        if (!userId) {
+          throw new Error('User ID not found')
+        }
+
+        // The JWT token will be added in the header by the interceptor
+        await api.get(`/carts/checkout?email=${email}&userId=${userId}`)
+
+        // Reset local cart state after checkout
+        this.cartItems = []
+
+        return { success: true }
+      } catch (error) {
+        console.error('Error checking out:', error)
         this.error = error.message
         return { success: false, error: this.error }
       } finally {
