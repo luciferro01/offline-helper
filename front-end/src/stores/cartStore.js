@@ -20,6 +20,13 @@ export const useCartStore = defineStore('cart', {
     isEmpty() {
       return this.cartItems.length === 0
     },
+    // Add getters to match with Cart.vue
+    items() {
+      return this.cartItems
+    },
+    totalPrice() {
+      return this.totalAmount
+    },
   },
 
   actions: {
@@ -31,17 +38,19 @@ export const useCartStore = defineStore('cart', {
         const userStore = useUserStore()
 
         // Check if user is logged in
-        if (!userStore.loggedIn || !userStore.userId) {
+        if (!userStore.loggedIn) {
           throw new Error('User not authenticated')
         }
 
-        // Fetch cart using userId
-        const response = await api.get(`/carts/user/${userStore.userId}`)
+        // Token will be automatically added by the api interceptor
+        const response = await api.get('/carts/getCart')
 
-        this.cartItems = response.data.items || []
+        // Handle the data structure based on your API response
+        this.cartItems = response.data.data || []
 
         return { success: true }
       } catch (error) {
+        console.error('Error fetching cart:', error)
         this.error = error.message
         return { success: false, error: this.error }
       } finally {
@@ -57,13 +66,12 @@ export const useCartStore = defineStore('cart', {
         const userStore = useUserStore()
 
         // Check if user is logged in
-        if (!userStore.loggedIn || !userStore.userId) {
+        if (!userStore.loggedIn) {
           throw new Error('Please sign in to add items to cart')
         }
 
-        // Add item to cart
-        const response = await api.post('/carts/add', {
-          userId: userStore.userId,
+        // The JWT token will be added in the header by the interceptor
+        await api.post('/carts/items', {
           productOfferingId,
           quantity,
         })
@@ -73,6 +81,7 @@ export const useCartStore = defineStore('cart', {
 
         return { success: true }
       } catch (error) {
+        console.error('Error adding to cart:', error)
         this.error = error.message
         return { success: false, error: this.error }
       } finally {
@@ -80,7 +89,7 @@ export const useCartStore = defineStore('cart', {
       }
     },
 
-    async updateCartItem(itemId, quantity) {
+    async updateQuantity(itemId, quantity) {
       this.loading = true
       this.error = null
 
@@ -88,13 +97,12 @@ export const useCartStore = defineStore('cart', {
         const userStore = useUserStore()
 
         // Check if user is logged in
-        if (!userStore.loggedIn || !userStore.userId) {
+        if (!userStore.loggedIn) {
           throw new Error('User not authenticated')
         }
 
-        // Update cart item quantity
-        await api.put(`/carts/item/${itemId}`, {
-          userId: userStore.userId,
+        // The JWT token will be added in the header by the interceptor
+        await api.put(`/carts/items/${itemId}`, {
           quantity,
         })
 
@@ -103,6 +111,7 @@ export const useCartStore = defineStore('cart', {
 
         return { success: true }
       } catch (error) {
+        console.error('Error updating quantity:', error)
         this.error = error.message
         return { success: false, error: this.error }
       } finally {
@@ -110,7 +119,7 @@ export const useCartStore = defineStore('cart', {
       }
     },
 
-    async removeCartItem(itemId) {
+    async removeFromCart(itemId) {
       this.loading = true
       this.error = null
 
@@ -118,20 +127,19 @@ export const useCartStore = defineStore('cart', {
         const userStore = useUserStore()
 
         // Check if user is logged in
-        if (!userStore.loggedIn || !userStore.userId) {
+        if (!userStore.loggedIn) {
           throw new Error('User not authenticated')
         }
 
-        // Remove item from cart
-        await api.delete(`/carts/item/${itemId}`, {
-          data: { userId: userStore.userId },
-        })
+        // The JWT token will be added in the header by the interceptor
+        await api.delete(`/carts/items/${itemId}`)
 
         // Refresh cart
         await this.fetchCart()
 
         return { success: true }
       } catch (error) {
+        console.error('Error removing from cart:', error)
         this.error = error.message
         return { success: false, error: this.error }
       } finally {
@@ -147,18 +155,19 @@ export const useCartStore = defineStore('cart', {
         const userStore = useUserStore()
 
         // Check if user is logged in
-        if (!userStore.loggedIn || !userStore.userId) {
+        if (!userStore.loggedIn) {
           throw new Error('User not authenticated')
         }
 
-        // Clear entire cart
-        await api.delete(`/carts/user/${userStore.userId}`)
+        // The JWT token will be added in the header by the interceptor
+        await api.delete('/carts')
 
         // Reset local cart state
         this.cartItems = []
 
         return { success: true }
       } catch (error) {
+        console.error('Error clearing cart:', error)
         this.error = error.message
         return { success: false, error: this.error }
       } finally {

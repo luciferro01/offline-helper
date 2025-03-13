@@ -241,7 +241,7 @@ export const useProductStore = defineStore('product', {
     statusMessage: '',
 
     // Flag to toggle between mock data and API calls
-    useMockData: false, // Set to false when ready to use real API
+    useMockData: true, // Set to false when ready to use real API
   }),
 
   getters: {
