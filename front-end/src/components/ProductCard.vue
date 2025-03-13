@@ -1,11 +1,11 @@
 <template>
   <div class="product-card" @click="navigateToProduct">
     <div class="product-image">
-      <img :src="product.imageUrl" :alt="product.name" />
+      <img :src="product.productImage" :alt="product.name" />
       <slot name="badge"></slot>
     </div>
     <div class="product-info">
-      <h3 class="product-name">{{ product.name }}</h3>
+      <h3 class="product-name">{{ product.productName }}</h3>
       <div class="product-price">₹{{ formatPrice(product.price) }}</div>
       <div class="product-seller">{{ product.sellerName }}</div>
       <div class="product-rating">
@@ -14,7 +14,7 @@
             v-for="star in 5"
             :key="star"
             class="star"
-            :class="{ filled: star <= Math.round(product.rating) }"
+            :class="{ filled: star <= Math.round(product.productRating) }"
             >★</span
           >
         </div>

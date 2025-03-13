@@ -27,7 +27,7 @@ export const useProductStore = defineStore('product', {
     totalPages: 1,
 
     // Flag to toggle between mock data and API calls
-    useMockData: true, // Set to false when ready to use real API
+    useMockData: false, // Set to false when ready to use real API
   }),
 
   getters: {
@@ -92,7 +92,7 @@ export const useProductStore = defineStore('product', {
 
       // Original API code
       try {
-        const response = await api.get('/search?query=${this.search}')
+        const response = await api.get(`/search?query=${this.search}`)
         this.featuredProducts = response.data.data
         this.statusMessage = response.message
         return this.featuredProducts
@@ -173,7 +173,7 @@ export const useProductStore = defineStore('product', {
 
       // API call to the backend
       try {
-        const response = await api.get(`/all`, {
+        const response = await api.get(`/search/all`, {
           params: {
             query: query,
             page: page - 1, // Adjust for 0-based indexing in Spring Boot
@@ -183,10 +183,10 @@ export const useProductStore = defineStore('product', {
 
         // Process the response
         // Extract data from the CommonResponse wrapper
-        const commonResponse = response.data.data || {}
+        const commonResponse = response.data || {}
 
         // Extract the PageImpl from the data field of CommonResponse
-        const pageData = commonResponse.data.data || {}
+        const pageData = commonResponse.data || {}
 
         this.allProducts = pageData.content || []
         this.totalItems = pageData.totalElements || this.allProducts.length

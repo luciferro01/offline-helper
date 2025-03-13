@@ -8,7 +8,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  // withCredentials: true, // Important for CORS with credentials
+  withCredentials: true, // Important for CORS with credentials
 })
 
 // Function to refresh token
@@ -25,7 +25,7 @@ const refreshAuthToken = async () => {
     const response = await axios.post(
       'http://localhost:8084/auth/refresh-token',
       { refreshToken },
-      //{ withCredentials: true },
+      { withCredentials: true },
     )
 
     // Check if tokens are in headers

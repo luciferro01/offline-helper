@@ -37,9 +37,9 @@ export const useUserStore = defineStore('user', {
         const response = await api.post(
           '/auth/login',
           { email, password },
-          // {
-          //   withCredentials: true, // Important for CORS with credentials
-          // },
+          {
+            withCredentials: true, // Important for CORS with credentials
+          },
         )
 
         console.log('Full response:', response)
