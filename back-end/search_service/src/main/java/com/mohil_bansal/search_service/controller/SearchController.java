@@ -31,34 +31,56 @@ public class SearchController {
     }
 
     @GetMapping("/productName")
-    public ResponseEntity<CommonResponse<List<ProductOffering>>> searchByProductName(@RequestParam String productName) {
+    public ResponseEntity<CommonResponse<PageImpl<ProductOffering>>> searchByProductName(@RequestParam String productName, @RequestParam int page, @RequestParam int size) {
         try {
-            List<ProductOffering> results = searchService.searchByProductName(productName);
+            PageImpl<ProductOffering> results = searchService.searchByProductName(productName, page, size);
             return ResponseEntity.ok(CommonResponse.success(results, 200, "Search results by product name"));
         } catch (Exception e) {
             return ResponseEntity.ok(CommonResponse.failure("Error during search by product name", 500));
         }
     }
 
-    @GetMapping("/productNameContainingPageable")
-    public ResponseEntity<CommonResponse<Page<ProductOffering>>> searchByProductNameContaining(@RequestParam String keyword, @RequestParam int page, @RequestParam int size) {
-        try {
-            PageImpl<ProductOffering> results = searchService.findByProductNameContaining(keyword, page, size);
-            return ResponseEntity.ok(CommonResponse.success(results, 200, "Search results by product name containing"));
-        } catch (Exception e) {
-            return ResponseEntity.ok(CommonResponse.failure("Error during search by product name containing", 500));
-        }
-    }
-
     @GetMapping("/category")
-    public ResponseEntity<CommonResponse<List<ProductOffering>>> searchByCategory(@RequestParam String category) {
+    public ResponseEntity<CommonResponse<PageImpl<ProductOffering>>> searchByCategory(@RequestParam String category, @RequestParam int page, @RequestParam int size) {
         try {
-            List<ProductOffering> results = searchService.searchByCategory(category);
+            PageImpl<ProductOffering> results = searchService.searchByCategory(category, page, size);
             return ResponseEntity.ok(CommonResponse.success(results, 200, "Search results by category"));
         } catch (Exception e) {
             return ResponseEntity.ok(CommonResponse.failure("Error during search by category", 500));
         }
     }
+
+    @GetMapping("/sellerName")
+    public ResponseEntity<CommonResponse<PageImpl<ProductOffering>>> searchBySellerName(@RequestParam String sellerName, @RequestParam int page, @RequestParam int size) {
+        try {
+            PageImpl<ProductOffering> results = searchService.searchBySellerName(sellerName, page, size);
+            return ResponseEntity.ok(CommonResponse.success(results, 200, "Search results by seller name"));
+        } catch (Exception e) {
+            return ResponseEntity.ok(CommonResponse.failure("Error during search by seller name", 500));
+        }
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<CommonResponse<PageImpl<ProductOffering>>> searchByAll(@RequestParam String query, @RequestParam int page, @RequestParam int size) {
+        try {
+            PageImpl<ProductOffering> results = searchService.searchByAll(query, page, size);
+            return ResponseEntity.ok(CommonResponse.success(results, 200, "Search results by all"));
+        } catch (Exception e) {
+            return ResponseEntity.ok(CommonResponse.failure("Error during search by all", 500));
+        }
+    }
+
+
+//    @GetMapping("/productNameContainingPageable")
+//    public ResponseEntity<CommonResponse<Page<ProductOffering>>> searchByProductNameContaining(@RequestParam String keyword, @RequestParam int page, @RequestParam int size) {
+//        try {
+//            PageImpl<ProductOffering> results = searchService.findByProductNameContaining(keyword, page, size);
+//            return ResponseEntity.ok(CommonResponse.success(results, 200, "Search results by product name containing"));
+//        } catch (Exception e) {
+//            return ResponseEntity.ok(CommonResponse.failure("Error during search by product name containing", 500));
+//        }
+//    }
+
 
     @PostMapping
     public ResponseEntity<CommonResponse<ProductOfferingDto>> create(@RequestBody ProductOfferingDto productOfferingDto) {

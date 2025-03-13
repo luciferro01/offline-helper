@@ -8,7 +8,6 @@ import com.mohil_bansal.search_service.repository.ProductOfferingRepository;
 import com.mohil_bansal.search_service.service.RankCalculatorService;
 import com.mohil_bansal.search_service.service.SearchService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.solr.client.solrj.SolrQuery;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Slf4j
@@ -34,35 +32,71 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public List<ProductOffering> searchByProductName(String productName) {
-        return productOfferingRepository.findByProductName(productName);
+    public PageImpl<ProductOffering> searchByProductName(String productName, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("sellerRank").descending());
+        List<ProductOffering> productOfferingsList = new ArrayList();
+        Page<ProductOffering> productOfferingsPage = productOfferingRepository.findByProductName(productName, pageable);
+
+
+        productOfferingsPage.forEach(productOfferingsList::add);
+        return new PageImpl<>(productOfferingsList, pageable, productOfferingsPage.getTotalElements());
+
     }
 
     @Override
-    public List<ProductOffering> searchByCategory(String category) {
-        return productOfferingRepository.findByCategory(category);
-    }
-
-
-    public PageImpl<ProductOffering> findByProductNameContaining(String keyword, int page, int size) {
-
-        //TODO: Use SolrQuery to search
-//        SolrQuery solrQuery = new SolrQuery();
-//            solrQuery.add("q", query);
+    public PageImpl<ProductOffering> searchByCategory(String category, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("sellerRank").descending());
         List<ProductOffering> productOfferingsList = new ArrayList();
-        Page<ProductOffering> productOfferingsPage = productOfferingRepository.findByProductName(keyword, pageable);
+        Page<ProductOffering> productOfferingsPage = productOfferingRepository.findByCategory(category, pageable);
 
 
         productOfferingsPage.forEach(productOfferingsList::add);
         return new PageImpl<>(productOfferingsList, pageable, productOfferingsPage.getTotalElements());
     }
 
+    @Override
+    public PageImpl<ProductOffering> searchBySellerName(String sellerName, int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("sellerRank").descending());
+        List<ProductOffering> productOfferingsList = new ArrayList<>();
+        Page<ProductOffering> productOfferingsPage = productOfferingRepository.findBySellerName(sellerName, pageable);
+
+        productOfferingsPage.forEach(productOfferingsList::add);
+        return new PageImpl<>(productOfferingsList, pageable, productOfferingsPage.getTotalElements());
+    }
+
+    @Override
+    public PageImpl<ProductOffering> searchByAll(String query, int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("sellerRank").descending());
+        List<ProductOffering> productOfferingsList = new ArrayList();
+        Page<ProductOffering> productOfferingsPage = productOfferingRepository.findByProductNameContainingOrSellerNameContainingOrCategoryContaining(query, query, query, pageable);
+
+        productOfferingsPage.forEach(productOfferingsList::add);
+        return new PageImpl<>(productOfferingsList, pageable, productOfferingsPage.getTotalElements());
+    }
+
+
+
+//    public PageImpl<ProductOffering> findByProductNameContaining(String keyword, int page, int size) {
+//
+//        //TODO: Use SolrQuery to search
+////        SolrQuery solrQuery = new SolrQuery();
+////            solrQuery.add("q", query);
+//        Pageable pageable = PageRequest.of(page, size, Sort.by("sellerRank").descending());
+//        List<ProductOffering> productOfferingsList = new ArrayList();
+//        Page<ProductOffering> productOfferingsPage = productOfferingRepository.findByProductName(keyword, pageable);
+//
+//
+//        productOfferingsPage.forEach(productOfferingsList::add);
+//        return new PageImpl<>(productOfferingsList, pageable, productOfferingsPage.getTotalElements());
+//    }
+
 
     @Override
     public ProductOfferingDto update(ProductOfferingDto productOfferingDto) {
         log.info("Received Product Offering Update Event: {}", productOfferingDto);
-        ProductOffering existingOffering = productOfferingRepository.findById((productOfferingDto.getId())).orElseThrow(()-> new RuntimeException("Product Offering not found"));
+        ProductOffering existingOffering = productOfferingRepository.findById((productOfferingDto.getId())).orElseThrow(() -> new RuntimeException("Product Offering not found"));
         productOfferingRepository.save(existingOffering);
         rankCalculatorService.recalculateAllSellerRanks();
         return productOfferingDto;
@@ -85,7 +119,7 @@ public class SearchServiceImpl implements SearchService {
     public void consumeProductOfferingUpdateEvent(String event) {
         ProductOfferingDto productOfferingDto = new ProductOfferingDto();
         log.info("Received Product Offering Update Event: {}", event);
-        try{
+        try {
             ObjectMapper objectMapper = new ObjectMapper();
             ProductOfferingUpdateEvent updateEvent = objectMapper.readValue(event, ProductOfferingUpdateEvent.class);
 
@@ -95,13 +129,12 @@ public class SearchServiceImpl implements SearchService {
 
             create(updateEvent.getProductOfferingDto());
             //Calling respective Methods
-            if("CREATE".equals(updateEvent.getOperationType())){
-            }else if("UPDATE".equals(updateEvent.getOperationType())){
+            if ("CREATE".equals(updateEvent.getOperationType())) {
+            } else if ("UPDATE".equals(updateEvent.getOperationType())) {
                 update(updateEvent.getProductOfferingDto());
             }
             productOfferingDto = updateEvent.getProductOfferingDto();
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 

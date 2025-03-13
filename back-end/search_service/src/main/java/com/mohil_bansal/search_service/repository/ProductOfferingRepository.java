@@ -21,9 +21,16 @@ public interface ProductOfferingRepository extends SolrCrudRepository<ProductOff
     Page<ProductOffering> findByProductName(String productName, Pageable pageable);
 
     @Query("category:*?0*")
-    List<ProductOffering> findByCategory(String categoryName);
+    Page<ProductOffering> findByCategory(String categoryName, Pageable pageable);
+
+    @Query("sellerName:*?0*")
+    Page<ProductOffering> findBySellerName(String sellerName, Pageable pageable);
 
     @Query("productName:*?0* OR sellerName:*?0* OR category:*?0*")
     List<ProductOffering> findByProductNameContainingOrSellerNameContainingOrCategoryContaining(String productName, String sellerName, String categoryName);
+
+
+    @Query("productName:*?0* OR sellerName:*?0* OR category:*?0*")
+    Page<ProductOffering> findByProductNameContainingOrSellerNameContainingOrCategoryContaining(String productName, String sellerName, String categoryName, Pageable pageable);
 
 }
