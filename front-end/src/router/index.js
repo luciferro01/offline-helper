@@ -37,7 +37,7 @@ const routes = [
     component: PLP,
   },
   {
-    path: '/product/:id',
+    path: '/product/:productId',
     name: 'ProductDetail',
     component: ProductDetail,
     props: true,

@@ -55,7 +55,7 @@ export default {
       // Navigate to product detail page
       this.$router.push({
         name: 'ProductDetail',
-        params: { id: this.product.id },
+        params: { productId: this.product.productId },
       })
     },
   },

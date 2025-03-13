@@ -19,6 +19,7 @@ export const useProductStore = defineStore('product', {
     error: null,
     search: ' ',
     statusMessage: '',
+    currentProductOffering: null,
 
     // Pagination state
     currentPage: 1,
@@ -106,17 +107,59 @@ export const useProductStore = defineStore('product', {
     },
 
     // Keep your existing fetchProductById implementation
+
+    // Update your fetchProductById method in productStore.js
     async fetchProductById(productId) {
       this.loading = true
       this.error = null
       this.currentProduct = null
 
-      // Original API code
       try {
-        const response = await api.get(`/products/${productId}`)
-        this.currentProduct = response.data.data
-        this.statusMessage = response.message
-        return this.currentProduct
+        // 1. Fetch basic product info
+        const productResponse = await api.get(`/products/${productId}`)
+        const productData = productResponse.data.data
+
+        // 2. Fetch sellers for this product
+        const sellersResponse = await api.get(
+          `/seller/sellersForProduct?productId=${Number(productId)}`,
+        )
+        const sellers = sellersResponse.data.data || []
+
+        // Start building our complete product object
+        const product = {
+          ...productData,
+          sellers: sellers,
+          images: productData.imagesUrl ? [productData.imagesUrl] : [],
+          rating: 0,
+          ratingCount: 0,
+          reviews: [],
+        }
+
+        // 3. If sellers exist, get the first offering's details and reviews
+        if (sellers.length > 0) {
+          const firstOfferingId = sellers[0].id
+
+          // Get offering details
+          const offeringResponse = await api.get(`/seller/${firstOfferingId}`)
+          const offeringData = offeringResponse.data.data
+
+          // Get reviews
+          const reviewsResponse = await api.get(`/reviews/${firstOfferingId}`)
+          const reviews = reviewsResponse.data.data || []
+
+          // Complete the product object
+          product.offering = offeringData
+          product.reviews = reviews
+          product.rating = offeringData.rating || 0
+          product.ratingCount = reviews.length
+          product.details = {
+            category: productData.categoryName,
+            // Add other details as needed
+          }
+        }
+
+        this.currentProduct = product
+        return product
       } catch (error) {
         console.error(`Error fetching product ${productId}:`, error)
         this.error = error.message || 'Failed to fetch product details'

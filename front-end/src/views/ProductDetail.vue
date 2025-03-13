@@ -35,13 +35,17 @@
           <span class="rating-count">{{ product.rating }} ({{ product.ratingCount }} reviews)</span>
         </div>
 
-        <div class="product-price">₹{{ formatPrice(selectedSeller.price) }}</div>
+        <div class="product-price">₹{{ formatPrice(product.offering.price) }}</div>
+
+        <!-- <div class="product-price">₹{{ selectedSeller.price }}</div> -->
 
         <div class="seller-section">
           <label for="seller-select">Seller:</label>
           <select id="seller-select" v-model="selectedSellerId" @change="updateSelectedSeller">
             <option v-for="seller in product.sellers" :key="seller.id" :value="seller.id">
-              {{ seller.name }} - ₹{{ formatPrice(seller.price) }}
+              <!-- {{ seller.name }} - ₹{{ formatPrice(seller.price) }} -->
+              {{ seller.name }}
+              <!-- - ₹{{ seller.price }} -->
             </option>
           </select>
         </div>
@@ -117,8 +121,9 @@
       <div class="reviews-list">
         <div v-for="review in product.reviews" :key="review.id" class="review-item">
           <div class="review-header">
-            <div class="review-user">{{ review.userName }}</div>
-            <div class="review-date">{{ formatDate(review.date) }}</div>
+            <!-- <div class="review-user">{{ review.userName }}</div> -->
+            <div class="review-user">Anonymous User</div>
+            <div class="review-date">{{ formatDate(review.createdAt) }}</div>
           </div>
           <div class="review-rating">
             <div class="stars">
@@ -156,10 +161,22 @@ export default {
   name: 'ProductDetail',
 
   props: {
-    id: {
+    productId: {
       type: [Number, String],
       required: true,
     },
+    // productOfferingId: {
+    //   type: [String, Number],
+    //   required: true,
+    // },
+    // productId: {
+    //   type: Number,
+    //   required: true,
+    // },
+    // sellerId: {
+    //   type: Number,
+    //   required: true,
+    // },
   },
 
   data() {
@@ -204,6 +221,7 @@ export default {
     },
 
     formatDate(dateString) {
+      console.log('Date is : ' + dateString)
       const options = { year: 'numeric', month: 'long', day: 'numeric' }
       return new Date(dateString).toLocaleDateString(undefined, options)
     },
@@ -234,9 +252,11 @@ export default {
     },
 
     getPercentage(rating) {
-      if (!this.product || !this.product.ratingDistribution) return 0
+      console.log(rating, 'rating')
+      console.log(this.product, 'dislay if condition')
+      if (!this.product || this.product.ratingCount === 0) return 0
 
-      const count = this.product.ratingDistribution[rating] || 0
+      const count = this.product[rating] || 0
       return Math.round((count / this.product.ratingCount) * 100)
     },
 
@@ -258,11 +278,9 @@ export default {
   },
 
   mounted() {
-    console.log('first')
-
     try {
-      console.log('Fetching product with ID:', this.id)
-      this.fetchProductById(this.id)
+      console.log('Fetching product with ID:', this.productId)
+      this.fetchProductById(this.productId)
       console.log('Product data received:', this.product)
       this.initializeProductDetails()
     } catch (error) {
