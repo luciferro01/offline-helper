@@ -2,15 +2,16 @@
   <div class="cart-container">
     <h2>Shopping Cart</h2>
 
+    <!-- Loading and Error states -->
     <div v-if="isLoading" class="loading-spinner">Loading cart...</div>
 
     <div v-if="error" class="error-message">
       {{ error }}
     </div>
 
+    <!-- Display cart items -->
     <div v-if="cartItems.length > 0" class="cart-items-grid">
       <div v-for="item in cartItems" :key="item.id" class="product-card">
-       
         <div class="product-image">
           <img :src="item.image || 'https://via.placeholder.com/150'" alt="Product Image" />
         </div>
@@ -18,6 +19,7 @@
           <h3 class="product-name">{{ item.productName || 'Product' }}</h3>
           <p class="product-price">Price: ₹{{ formatPrice(item.price) }}</p>
 
+          <!-- Quantity controls -->
           <div class="quantity-controls">
             <button
               @click="decrementQuantity(item)"
@@ -39,6 +41,7 @@
       </div>
     </div>
 
+    <!-- Empty cart message -->
     <div v-else-if="!isLoading" class="empty-cart">
       <p>Your cart is empty.</p>
       <router-link to="/" class="continue-shopping">Continue Shopping</router-link>
@@ -50,10 +53,17 @@
       <br />
       <button class="clear-cart" @click="handleClearCart" :disabled="isUpdating">Clear Cart</button
       ><br />
+      <!-- Move the Checkout button below the Clear Cart button -->
       <router-link to="/checkout" class="checkout-btn">Proceed to Checkout</router-link>
     </div>
 
-  
+    <!-- Debug panel - remove in production -->
+    <div v-if="showDebug" class="debug-panel">
+      <h3>Debug Information</h3>
+      <button @click="toggleDebug" class="debug-toggle">Hide Debug</button>
+      <pre>{{ JSON.stringify(cartItems, null, 2) }}</pre>
+    </div>
+    <button v-else @click="toggleDebug" class="debug-toggle">Show Debug</button>
   </div>
 </template>
 
@@ -71,6 +81,7 @@ export default {
       showDebug.value = !showDebug.value
     }
 
+    // Format price with commas for thousands
     const formatPrice = (price) => {
       if (!price) return '0'
       return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
@@ -95,7 +106,6 @@ export default {
     ...mapState(useCartStore, ['items', 'totalItems', 'totalPrice']),
 
     cartItems() {
-      
       return this.items
     },
   },
@@ -103,11 +113,13 @@ export default {
   methods: {
     ...mapActions(useCartStore, ['fetchCart', 'updateQuantity', 'removeFromCart', 'clearCart']),
 
+    // Increment quantity of item
     async incrementQuantity(item) {
       try {
         this.isUpdating = true
         console.log(`Incrementing item ID: ${item.id}, Current quantity: ${item.quantity}`)
 
+        // Make sure we're using the cart item's ID, not the product offering ID
         await this.updateQuantity(item.id, item.quantity + 1)
       } catch (error) {
         console.error('Error incrementing quantity:', error)
@@ -117,6 +129,7 @@ export default {
       }
     },
 
+    // Decrement quantity of item
     async decrementQuantity(item) {
       if (item.quantity <= 1) return
 
@@ -124,6 +137,7 @@ export default {
         this.isUpdating = true
         console.log(`Decrementing item ID: ${item.id}, Current quantity: ${item.quantity}`)
 
+        // Make sure we're using the cart item's ID, not the product offering ID
         await this.updateQuantity(item.id, item.quantity - 1)
       } catch (error) {
         console.error('Error decrementing quantity:', error)
@@ -133,11 +147,13 @@ export default {
       }
     },
 
+    // Remove item from cart
     async removeItem(item) {
       try {
         this.isUpdating = true
         console.log(`Removing item ID: ${item.id}`)
 
+        // Make sure we're using the cart item's ID, not the product offering ID
         await this.removeFromCart(item.id)
       } catch (error) {
         console.error('Error removing item:', error)
@@ -147,6 +163,7 @@ export default {
       }
     },
 
+    // Clear the entire cart and redirect to orders page
     async handleClearCart() {
       try {
         this.isUpdating = true
@@ -177,6 +194,7 @@ export default {
 </script>
 
 <style scoped>
+/* Cart styling */
 .cart-container {
   width: 100%;
   max-width: 1200px;
@@ -443,6 +461,3 @@ h2 {
   }
 }
 </style>
-
-
-   
