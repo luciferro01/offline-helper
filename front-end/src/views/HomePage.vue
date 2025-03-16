@@ -1,84 +1,89 @@
 <template>
-  <div class="home-page">
-    <!-- Loading and Error States -->
-    <div v-if="loading" class="loading-indicator">
-      <div class="spinner"></div>
-      <p>Loading products...</p>
-    </div>
+    <div class="home-page">
+        <div v-if="loading" class="loading-indicator">
+            <div class="spinner"></div>
+            <p>Loading products...</p>
+        </div>
 
-    <div v-else-if="error" class="error-message">
-      <p>{{ error }}</p>
-      <button @click="retryLoading" class="retry-button">Try Again</button>
-    </div>
+        <div v-else-if="error" class="error-message">
+            <p>{{ error }}</p>
+            <button @click="retryLoading" class="retry-button">Try Again</button>
+        </div>
 
-    <div v-else-if="statusMessage" class="status-message">
-      {{ statusMessage }}
-    </div>
+        <div v-else-if="statusMessage" class="status-message">
+            {{ statusMessage }}
+        </div>
 
-    <!-- Main Content (only shown when not loading and no errors) -->
-    <template v-if="!loading && !error">
-      <!-- Product Carousel -->
-      <div v-if="featuredProducts.length > 0" class="product-carousel">
-        <button class="carousel-arrow left" @click="prevSlide">
-          <span>‹</span>
-        </button>
+        <template v-if="!loading && !error">
+            <div v-if="featuredProducts && featuredProducts.length > 0" class="product-carousel">
+                <button class="carousel-arrow left" @click="prevSlide">
+                    <span>‹</span>
+                </button>
 
-        <div class="carousel-container">
-          <div
-            class="carousel-slides"
-            :style="{ transform: `translateX(-${currentSlide * 100}%)` }"
-          >
-            <div
-              v-for="(product, index) in featuredProducts"
-              :key="product.id"
-              class="carousel-slide"
-            >
-              <div class="carousel-product">
-                <img :src="product.imageUrl" :alt="product.name" />
-                <div class="carousel-product-info">
-                  <div class="promo-tag">{{ product.promoTag || 'Featured' }}</div>
-                  <h2>{{ product.name }}</h2>
-                  <p class="price">₹{{ formatPrice(product.price) }}</p>
+                <div class="carousel-container">
+                    <div
+                        class="carousel-slides"
+                        :style="{ transform: `translateX(-${currentSlide * 100}%)` }"
+                    >
+                        <div
+                            v-for="(product, index) in featuredProducts"
+                            :key="product.id"
+                            class="carousel-slide"
+                        >
+                            <div class="carousel-product">
+                                <img :src="product.imageUrl" :alt="product.name" />
+                                <div class="carousel-product-info">
+                                    <div class="promo-tag">{{ product.promoTag || 'Featured' }}</div>
+                                    <h2>{{ product.name }}</h2>
+                                    <p class="price">₹{{ formatPrice(product.price) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
+
+                <button class="carousel-arrow right" @click="nextSlide">
+                    <span>›</span>
+                </button>
+
+                <div class="carousel-dots">
+                    <button
+                        v-for="(_, index) in featuredProducts"
+                        :key="index"
+                        class="carousel-dot"
+                        :class="{ active: index === currentSlide }"
+                        @click="goToSlide(index)"
+                    ></button>
+                </div>
             </div>
-          </div>
+
+            <div class="all-products-section">
+                <h2 class="section-title">Our Products</h2>
+
+                <div v-if="!allProducts || allProducts.length === 0" class="empty-products">
+                    <p>No products found. Check back soon for new items!</p>
+                </div>
+
+                <div v-else class="products-grid">
+                    <ProductCard
+                        v-for="product in allProducts"
+                        :key="product.id"
+                        :product="product"
+                        @click="goToProductDetail(product.id)"
+                    />
+                </div>
+            </div>
+        </template>
+        <div v-if="selectedProduct" class="product-popup">
+            <div class="popup-content">
+                <button @click="closeProductPopup" class="close-button">X</button>
+                <h2>{{ selectedProduct.name }}</h2>
+                <img :src="selectedProduct.imageUrl" :alt="selectedProduct.name" />
+                <p>Description: {{ selectedProduct.description }}</p>
+                <p>Price: ₹{{ formatPrice(selectedProduct.price) }}</p>
+            </div>
         </div>
-
-        <button class="carousel-arrow right" @click="nextSlide">
-          <span>›</span>
-        </button>
-
-        <div class="carousel-dots">
-          <button
-            v-for="(_, index) in featuredProducts"
-            :key="index"
-            class="carousel-dot"
-            :class="{ active: index === currentSlide }"
-            @click="goToSlide(index)"
-          ></button>
-        </div>
-      </div>
-
-      <!-- All Products Section -->
-      <div class="all-products-section">
-        <h2 class="section-title">Our Products</h2>
-
-        <!-- Empty state for products -->
-        <div v-if="allProducts.length === 0" class="empty-products">
-          <p>No products found. Check back soon for new items!</p>
-        </div>
-
-        <div v-else class="products-grid">
-          <ProductCard v-for="product in allProducts" :key="product.id" :product="product">
-            <!-- <template v-slot:badge v-if="product.isNew">
-                <div class="new-badge">New</div>
-              </template> -->
-          </ProductCard>
-        </div>
-      </div>
-    </template>
-  </div>
+    </div>
 </template>
 
 <script>
@@ -87,103 +92,112 @@ import { useProductStore } from '@/stores/productStore'
 import ProductCard from '@/components/ProductCard.vue'
 
 export default {
-  name: 'HomePage',
+    name: 'HomePage',
 
-  components: {
-    ProductCard,
-  },
-
-  data() {
-    return {
-      currentSlide: 0,
-      autoplayInterval: null,
-    }
-  },
-
-  computed: {
-    ...mapState(useProductStore, [
-      'featuredProducts',
-      'allProducts',
-      'loading',
-      'error',
-      'statusMessage',
-    ]),
-  },
-
-  methods: {
-    ...mapActions(useProductStore, ['fetchProducts', 'fetchFeaturedProducts', 'clearError']),
-
-    prevSlide() {
-      if (this.featuredProducts.length === 0) return
-      this.currentSlide =
-        (this.currentSlide - 1 + this.featuredProducts.length) % this.featuredProducts.length
-      this.resetAutoplay()
+    components: {
+        ProductCard,
     },
 
-    nextSlide() {
-      if (this.featuredProducts.length === 0) return
-      this.currentSlide = (this.currentSlide + 1) % this.featuredProducts.length
-      this.resetAutoplay()
-    },
+    data() {
+        return {
+            currentSlide: 0,
+            autoplayInterval: null,
+            selectedProduct: null,
 
-    goToSlide(index) {
-      this.currentSlide = index
-      this.resetAutoplay()
-    },
-
-    startAutoplay() {
-      if (this.featuredProducts.length <= 1) return // Don't autoplay if only one slide
-      this.autoplayInterval = setInterval(() => {
-        this.nextSlide()
-      }, 5000) // Change slide every 5 seconds
-    },
-
-    resetAutoplay() {
-      clearInterval(this.autoplayInterval)
-      this.startAutoplay()
-    },
-
-    formatPrice(price) {
-      return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
-    },
-
-    // Retry loading products if there was an error
-    async retryLoading() {
-      this.clearError() // Clear the previous error
-      try {
-        await Promise.all([this.fetchProducts(), this.fetchFeaturedProducts()])
-
-        // If products loaded successfully, start carousel
-        if (this.featuredProducts.length > 0) {
-          this.startAutoplay()
         }
-      } catch (error) {
-        console.error('Error retrying product load:', error)
-      }
     },
-  },
 
-  async mounted() {
-    try {
-      // Fetch products from API
-      await Promise.all([this.fetchProducts(), this.fetchFeaturedProducts()])
+    computed: {
+        ...mapState(useProductStore, [
+            'featuredProducts',
+            'allProducts',
+            'loading',
+            'error',
+            'statusMessage',
+        ]),
+    },
 
-      // Start carousel if we have featured products
-      if (this.featuredProducts.length > 0) {
-        this.startAutoplay()
-      }
-    } catch (error) {
-      console.error('Error loading products:', error)
-    }
-  },
+    methods: {
+        ...mapActions(useProductStore, ['fetchProducts', 'fetchFeaturedProducts', 'clearError']),
 
-  beforeUnmount() {
-    // Clear interval when component is unmounted
-    clearInterval(this.autoplayInterval)
-  },
+        prevSlide() {
+            if (this.featuredProducts.length === 0) return
+            this.currentSlide =
+                (this.currentSlide - 1 + this.featuredProducts.length) % this.featuredProducts.length
+            this.resetAutoplay()
+        },
+
+        nextSlide() {
+            if (this.featuredProducts.length === 0) return
+            this.currentSlide = (this.currentSlide + 1) % this.featuredProducts.length
+            this.resetAutoplay()
+        },
+
+        goToSlide(index) {
+            this.currentSlide = index
+            this.resetAutoplay()
+        },
+
+        startAutoplay() {
+            if (this.featuredProducts.length <= 1) return // Don't autoplay if only one slide
+            this.autoplayInterval = setInterval(() => {
+                this.nextSlide()
+            }, 5000) // Change slide every 5 seconds
+        },
+
+        resetAutoplay() {
+            clearInterval(this.autoplayInterval)
+            this.startAutoplay()
+        },
+
+        formatPrice(price) {
+            return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+        },
+
+        async retryLoading() {
+            this.clearError()
+            try {
+                 await this.fetchFeaturedProducts();
+                 await this.fetchProducts();
+
+                 if (this.featuredProducts.length > 0) {
+                     this.startAutoplay();
+                 }
+            } catch (error) {
+                console.error("Error retrying product load:", error);
+            }
+        },
+        showProductPopup(product) {
+            this.selectedProduct = product;
+        },
+        closeProductPopup() {
+            this.selectedProduct = null;
+        },
+        goToProductDetail(productId) {
+                
+                this.$router.push({ name: 'ProductDetail', params: { productId: productId } });
+            },
+    },
+
+    async mounted() {
+        try {
+            await this.fetchFeaturedProducts();
+            await this.fetchProducts();
+          if (this.featuredProducts.length > 0) {
+            this.startAutoplay()
+          }
+        } catch (error) {
+          console.error('Error loading products:', error)
+        }
+    },
+
+    beforeUnmount() {
+        clearInterval(this.autoplayInterval)
+    },
+
+    
 }
 </script>
-
 <style scoped>
 .home-page {
   width: 100%;

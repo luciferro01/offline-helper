@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
   <div class="product-card" @click="navigateToProduct">
     <div class="product-image">
       <img :src="product.productImage" :alt="product.name" />
@@ -153,5 +153,87 @@ export default {
 
 .rating-count {
   color: #999;
+}
+</style> -->
+
+<template>
+  <div class="product-card">
+      <img :src="product.imageUrl" :alt="product.name" />
+      <div class="product-info">
+          <h3>{{ product.name }}</h3>
+          <p class="price">₹{{ formatPrice(product.price) }}</p>
+          <div class="promo-tag" v-if="product.promoTag">{{ product.promoTag }}</div>
+          <slot name="badge"></slot>
+      </div>
+  </div>
+</template>
+
+<script>
+export default {
+  props: {
+      product: {
+          type: Object,
+          required: true,
+      },
+  },
+  methods: {
+      formatPrice(price) {
+          if (price === null || price === undefined) {
+              return 'Price not available'; // Or an appropriate message
+          }
+          return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      },
+  },
+};
+</script>
+
+<style scoped>
+/* Add your styling for the product card here */
+.product-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+  cursor: pointer;
+  /* Add cursor pointer */
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.product-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.product-info {
+  padding: 1rem;
+  text-align: center;
+}
+
+.product-info h3 {
+  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.product-info .price {
+  color: #0095da;
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+}
+
+.promo-tag {
+  display: inline-block;
+  background-color: #0095da;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: bold;
 }
 </style>

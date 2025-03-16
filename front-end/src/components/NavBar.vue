@@ -1,11 +1,11 @@
 <template>
   <nav class="navbar">
-    <!-- Company Logo (Always visible) -->
+    <!-- Company Logo -->
     <router-link to="/" class="logo">
       <div class="logo-text"><img src="@/assets/blibli.png" width="90" /></div>
     </router-link>
 
-    <!-- Show full navbar only for logged-in users -->
+    <!-- Show full navbar for logged-in users -->
     <template v-if="loggedIn">
       <div class="navbar-content">
         <!-- Search Bar -->
@@ -80,14 +80,8 @@
             <div class="nav-link">
               <div class="nav-text">
                 <span class="nav-greeting">Hello, {{ userName }}</span>
-                <!-- <span class="nav-link-text">Account</span> -->
               </div>
             </div>
-
-            <!-- //Dropdown for account actions -->
-            <!-- <div class="account-dropdown">
-              <router-link to="/signin" class="signin-button">Sign In</router-link>
-            </div> -->
           </div>
 
           <!-- Cart -->
@@ -167,20 +161,17 @@ export default {
   background-color: lightblue;
   color: white;
   padding: 0.5rem 1rem;
-  height: 60px;
+  min-height: 60px;
   align-items: center;
-  position: relative; /* Make it a positioning context */
-}
-
-.navbar-content {
-  display: flex;
-  flex: 1;
+  flex-wrap: nowrap;
+  justify-content: space-between;
 }
 
 .logo {
+  flex: 0 0 auto; /* Don't grow or shrink, stay at natural size */
   padding: 0.5rem;
-  margin-right: 1rem;
   text-decoration: none;
+  z-index: 2;
 }
 
 .logo:hover {
@@ -193,22 +184,20 @@ export default {
   font-weight: bold;
 }
 
-.signin-button-container {
-  margin-left: auto;
-}
-
-.signin-button:hover {
-  background-color: skyblue;
+.navbar-content {
+  display: flex;
+  flex: 1;
+  justify-content: center; /* Center the content */
+  align-items: center;
+  position: relative;
+  padding: 0 1rem;
 }
 
 .search-container {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+  width: 60%; /* Take 60% of the navbar-content space */
+  max-width: 600px;
   display: flex;
-  width: 600px; /* Fixed width */
-  z-index: 1;
+  margin: 0 auto; /* Center within parent */
 }
 
 .search-input {
@@ -225,6 +214,7 @@ export default {
   padding: 0 0.75rem;
   border-radius: 0 4px 4px 0;
   cursor: pointer;
+  color: white;
 }
 
 .search-button:hover {
@@ -234,7 +224,26 @@ export default {
 .navbar-right {
   display: flex;
   align-items: center;
-  margin-left: auto;
+  flex: 0 0 auto; /* Don't grow or shrink */
+  z-index: 2;
+}
+
+.signin-button-container {
+  flex: 0 0 auto;
+  z-index: 2;
+}
+
+.signin-button {
+  display: inline-block;
+  color: white;
+  background-color: #2789f2;
+  padding: 0.5rem 1rem;
+  border-radius: 3px;
+  text-decoration: none;
+}
+
+.signin-button:hover {
+  background-color: skyblue;
 }
 
 .nav-item {
@@ -295,7 +304,7 @@ export default {
   padding: 0.5rem;
   z-index: 10;
   display: none;
-  /*min-width: 120px; Add this to ensure adequate width */
+  min-width: 120px;
 }
 
 .nav-item:hover .account-dropdown {
@@ -315,5 +324,65 @@ export default {
 
 .signout-button:hover {
   background-color: lightblue;
+}
+
+/* Media queries for responsive design */
+@media (max-width: 992px) {
+  .navbar {
+    flex-wrap: wrap;
+  }
+
+  .logo {
+    flex-basis: 30%;
+    text-align: left;
+  }
+
+  .navbar-content {
+    order: 3;
+    flex-basis: 100%;
+    margin-top: 0.5rem;
+  }
+
+  .search-container {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .navbar-right,
+  .signin-button-container {
+    flex-basis: auto;
+  }
+}
+
+@media (max-width: 576px) {
+  .navbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .logo {
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+
+  .navbar-right {
+    justify-content: center;
+    margin-top: 0.5rem;
+  }
+
+  .signin-button-container {
+    text-align: center;
+    margin-top: 0.5rem;
+  }
+
+  .nav-item {
+    padding: 0 0.5rem;
+  }
+
+  .cart-icon,
+  .nav-greeting,
+  .nav-link-text {
+    font-size: 0.8rem;
+  }
 }
 </style>

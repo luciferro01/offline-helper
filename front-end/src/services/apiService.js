@@ -3,7 +3,7 @@ import axios from 'axios'
 
 // Create base API instance with correct base URL
 const api = axios.create({
-  baseURL: 'http://localhost:8084',
+  baseURL: '/api',
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
@@ -23,7 +23,7 @@ const refreshAuthToken = async () => {
 
     // Call the refresh token endpoint
     const response = await axios.post(
-      'http://localhost:8084/auth/refresh-token',
+      '/api/auth/refresh-token',
       { refreshToken },
       { withCredentials: true },
     )

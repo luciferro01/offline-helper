@@ -79,7 +79,7 @@ export const useCartStore = defineStore('cart', {
       }
     },
 
-    async addToCart(productOfferingId, quantity = 1) {
+    async addToCart(productOfferingId, quantity) {
       this.loading = true
       this.error = null
 

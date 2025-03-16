@@ -272,9 +272,10 @@ export default {
         console.log('Submitting Review Data:', reviewData)
 
         const response = await api.post(
-          `/reviews?=productOfferingId=${productOfferingId.value}`,
-          reviewData,
-        )
+    `/reviews?productOfferingId=${productOfferingId.value}`,
+    reviewData,
+  );
+
         console.log('Review submission successful:', response)
 
         // Show success message

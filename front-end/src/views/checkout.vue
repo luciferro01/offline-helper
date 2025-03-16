@@ -118,85 +118,81 @@ export default {
         router.push('/')
       }
 
-      user_id.value = 1 // For demo; in production, get from userStore
-      console.log('User ID:', user_id.value)
+      
+      
     })
 
     const submitEmail = async () => {
-      if (!email.value) {
-        errorMessage.value = 'Please enter a valid email.'
-        return
-      }
+  if (!email.value) {
+    errorMessage.value = 'Please enter a valid email.';
+    return;
+  }
 
-      loading.value = true
-      errorMessage.value = ''
-      successMessage.value = ''
+  loading.value = true;
+  errorMessage.value = '';
+  successMessage.value = '';
 
-      try {
-        if (!user_id.value) {
-          errorMessage.value = 'User ID is required. Please login.'
-          return // Stop if no user ID
-        }
+  try {
+    // **CORRECTED: Use POST request**
+    const response = await api.get('/carts/checkout', {
+      email: email.value,
+    });
+    console.log(response);
 
-        // const emailData = {
-        //   email: email.value,
-        // }
+    if (response.status === 200 || response.status === 201) {
+      // Close the popup
+      showEmailPopup.value = false;
 
-        // console.log('Sending email data:', emailData)
+      // Mark order as placed
+      orderPlaced.value = true;
 
-        const response = await api.get(`/carts/checkout?email=${email.value}`)
-        console.log(response)
+      // Show success message
+      successMessage.value = 'Order placed successfully! Thank you for your purchase.';
 
-        if (response.status === 200 || response.status === 201) {
-          // Close the popup
-          showEmailPopup.value = false
+      // Clear the cart
+      await cartStore.clearCart();
 
-          // Mark order as placed
-          orderPlaced.value = true
-
-          // Show success message
-          successMessage.value = 'Order placed successfully! Thank you for your purchase.'
-
-          // Clear the cart
-          await cartStore.clearCart()
-
-          // Redirect to homepage after 3 seconds
-          setTimeout(() => {
-            router.push('/')
-          }, 3000)
-        } else {
-          // Unexpected status code
-          console.error('Unexpected status code:', response.status)
-          errorMessage.value = `Failed to submit email. Server returned status: ${response.status}.`
-        }
-      } catch (error) {
-        console.error('Error submitting email:', error)
-
-        if (error.response) {
-          console.error('Server responded with:', error.response.data)
-
-          // More specific handling for server errors
-          if (error.response.status === 400) {
-            errorMessage.value =
-              error.response.data.message ||
-              'Invalid email format. Please check your email address.'
-          } else if (error.response.status === 404) {
-            errorMessage.value = error.response.data.message || 'User not found. Please try again.'
-          } else {
-            errorMessage.value =
-              error.response.data.message || 'An error occurred. Please try again.'
-          }
-        } else if (error.request) {
-          console.error('No response received from server:', error.request)
-          errorMessage.value = 'No response from server. Please check your connection.'
-        } else {
-          console.error('Error setting up the request:', error.message)
-          errorMessage.value = 'An error occurred. Please try again.'
-        }
-      } finally {
-        loading.value = false
-      }
+      // Redirect to homepage after 3 seconds
+      setTimeout(() => {
+        router.push('/');
+      }, 3000);
+    } else {
+      // Unexpected status code
+      console.error('Unexpected status code:', response.status);
+      errorMessage.value = `Failed to submit email. Server returned status: ${response.status}.`;
     }
+  } catch (error) {
+    console.error('Error submitting email:', error);
+
+    if (error.response) {
+      console.error('Server responded with:', error.response.data);
+
+      // More specific handling for server errors
+      if (error.response.status === 400) {
+        errorMessage.value =
+          error.response.data.message ||
+          'Invalid email format. Please check your email address.';
+      } else if (error.response.status === 404) {
+        errorMessage.value = error.response.data.message || 'User not found. Please try again.';
+      } else if (error.response.status === 422) {
+          //Unprocessable Entity: Often indicates validation errors on the backend.
+          errorMessage.value = error.response.data.message || "Please review the details to ensure that they're correct"
+      }
+       else {
+        errorMessage.value =
+          error.response.data.message || 'An error occurred. Please try again.';
+      }
+    } else if (error.request) {
+      console.error('No response received from server:', error.request);
+      errorMessage.value = 'No response from server. Please check your connection.';
+    } else {
+      console.error('Error setting up the request:', error.message);
+      errorMessage.value = 'An error occurred. Please try again.';
+    }
+  } finally {
+    loading.value = false;
+  }
+};
 
     const onEmailPopupClose = () => {
       showEmailPopup.value = false
