@@ -134,9 +134,7 @@ export default {
 
   try {
     // **CORRECTED: Use POST request**
-    const response = await api.get('/carts/checkout', {
-      email: email.value,
-    });
+    const response = await api.get(`/carts/checkout?email=${email.value}`)
     console.log(response);
 
     if (response.status === 200 || response.status === 201) {

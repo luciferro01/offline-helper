@@ -345,71 +345,259 @@ export const useProductStore = defineStore('product', {
         //   }
         // },
 
-        async fetchProductById(productId) {
-          this.loading = true
-          this.error = null
-          this.currentProduct = null
+        // async fetchProductById(productId) {
+        //   this.loading = true
+        //   this.error = null
+        //   this.currentProduct = null
     
-          try {
-            // 1. Fetch basic product info
-            const productResponse = await api.get(`/products/${productId}`)
-            const productData = productResponse.data.data
-            console.log('Product Data:', productData)
-            // 2. Fetch sellers for this product
-            const sellersResponse = await api.get(
-              `/seller/sellersForProduct?productId=${Number(productId)}`)
+        //   try {
+        //     // 1. Fetch basic product info
+        //     const productResponse = await api.get(`/products/${productId}`)
+        //     const productData = productResponse.data.data
+        //     console.log('Product Data:', productData)
+        //     // 2. Fetch sellers for this product
+        //     const sellersResponse = await api.get(
+        //       `/seller/sellersForProduct?productId=${Number(productId)}`)
 
-              console.log(sellersResponse.data.data)
+        //       console.log(sellersResponse.data.data)
             
-            const sellers = sellersResponse.data.data || []
+        //     const sellers = sellersResponse.data.data || []
+    
+        //     // Start building our complete product object
+        //     const product = {
+        //       ...productData,
+        //       sellers: sellers,
+        //       images: productData.imagesUrl ? [productData.imagesUrl] : [],
+        //       rating: 0,
+        //       ratingCount: 0,
+        //       reviews: [],
+        //     }
+    
+        //     // 3. If sellers exist, get the first offering's details and reviews
+        //     if (sellers.length > 0) {
+        //       const firstOfferingId = sellers[0].id
+    
+        //       // Get offering details
+        //       const offeringResponse = await api.get(`/seller/${firstOfferingId}`)
+        //       const offeringData = offeringResponse.data.data
+        //       console.log(offeringData)
+    
+        //       // Get reviews
+        //       const reviewsResponse = await api.get(`/reviews/${firstOfferingId}`)
+        //       const reviews = reviewsResponse.data.data || []
+        //       console.log(reviews)
+    
+        //       // Complete the product object
+        //       product.offering = offeringData
+        //       product.reviews = reviews
+        //       product.rating = offeringData.rating || 0
+        //       product.ratingCount = reviews.length
+        //       product.details = {
+        //         category: productData.categoryName,
+        //         // Add other details as needed
+        //       }
+        //     }
+    
+        //     this.currentProduct = product
+        //     return product
+        //   } catch (error) {
+        //     console.error(`Error fetching product ${productId}:, error`)
+        //     this.error = error.message || 'Failed to fetch product details'
+        //     return null
+        //   } finally {
+        //     this.loading = false
+        //   }
+        // },
+        
+    //     async fetchProductById(productId) {
+    //         this.loading = true
+    //         this.error = null
+    //         this.currentProduct = null
+        
+    //         try {
+    //             // 1. Fetch basic product info
+    //             const productResponse = await api.get(`/products/${productId}`)
+    //             const productData = productResponse.data.data
+    //             console.log('Product Data:', productData)
+        
+    //             // 2. Fetch sellers for this product
+    //             const sellersResponse = await api.get(`/seller/sellersForProduct?productId=${Number(productId)}`)
+    //             console.log(sellersResponse.data.data)
+        
+    //             const sellers = sellersResponse.data.data || []
+        
+    //             // Start building our complete product object
+    //             const product = {
+    //                 ...productData,
+    //                 sellers: sellers,
+    //                 images: productData.imagesUrl ? [productData.imagesUrl] : [],
+    //                 rating: 0,
+    //                 ratingCount: 0,
+    //                 reviews: [],
+    //             }
+        
+    //             // 3. If sellers exist, get the correct offering details for this product
+    //             if (sellers.length > 0) {
+    //                 let offeringData = null
+    //                 let reviews = []
+        
+    //                 for (let seller of sellers) {
+    //                     const offeringsResponse = await api.get(`/seller/${seller.id}/offerings`)
+    // const offerings = offeringsResponse.data.data || [];
+
+    // // Log the entire offerings array to inspect its structure
+    // console.log("Offerings Array:", offerings);
+    // console.log("idd"+productId)
+
+    // // Check if offerings array is populated
+    // if (!offerings || offerings.length === 0) {
+    //     console.error(`No offerings found for seller ${seller.id}`);
+    //     continue; // Skip to next seller
+    // }
+
+    // // Log each offering to ensure productId is available
+    // offerings.forEach(offering => console.log("Offering:", offering));
+
+    // // 5. Find the correct offering for the current productId
+    // offeringData = offerings.find(offering => Number(offering.productId) === Number(productId));
+
+    // // Log the result of the find operation
+    // console.log("OfferingData from find:", offeringData);
+
+    // // 6. If we found the correct offering, break the loop
+    // if (offeringData) {
+    //     console.log("Found offering:", offeringData);
+    //     break;  // Exit loop after finding the offering
+    // }
+    //                 }
+        
+    //                 // If we found a valid offering, fetch reviews for it
+    //                 if (offeringData) {
+    //                     const reviewsResponse = await api.get(`/reviews/${offeringData.id}`)
+    //                     reviews = reviewsResponse.data.data || []
+        
+    //                     // Complete the product object
+    //                     product.offering = offeringData
+    //                     product.reviews = reviews || []
+    //                     product.rating = offeringData.rating || 0
+    //                     product.ratingCount = reviews.length
+    //                     product.details = {
+    //                         category: productData.categoryName,
+    //                         // Add other details as needed
+    //                     }
+    //                 }
+    //             }
+        
+    //             this.currentProduct = product
+            
+    //             return product
+    //         } catch (error) {
+    //             console.error(`Error fetching product ${productId}:`, error)
+    //             this.error = error.message || 'Failed to fetch product details'
+    //             return null
+    //         } finally {
+    //             this.loading = false
+    //         }
+    //     },
+    async fetchProductById(productId) {
+        this.loading = true;
+        this.error = null;
+        this.currentProduct = null;
+    
+        try {
+            // 1. Fetch basic product info
+            const productResponse = await api.get(`/products/${productId}`);
+            const productData = productResponse.data.data;
+            console.log('Product Data:', productData);
+    
+            // 2. Fetch sellers for this product
+            const sellersResponse = await api.get(`/seller/sellersForProduct?productId=${Number(productId)}`);
+            const sellers = sellersResponse.data.data || [];
+            console.log('Sellers:', sellers);
     
             // Start building our complete product object
             const product = {
-              ...productData,
-              sellers: sellers,
-              images: productData.imagesUrl ? [productData.imagesUrl] : [],
-              rating: 0,
-              ratingCount: 0,
-              reviews: [],
-            }
+                ...productData,
+                sellers: sellers,
+                images: productData.imagesUrl ? [productData.imagesUrl] : [],
+                rating: 0,
+                ratingCount: 0,
+                reviews: [],
+            };
     
-            // 3. If sellers exist, get the first offering's details and reviews
+            // 3. If sellers exist, get the correct offering details for this product
+            let offeringData = null;
+            let reviews = [];
+    
             if (sellers.length > 0) {
-              const firstOfferingId = sellers[0].id
+                for (let seller of sellers) {
+                    // Fetch offerings for the seller
+                    const offeringsResponse = await api.get(`/seller/${seller.id}/offerings`);
+                    const offerings = offeringsResponse.data.data || [];
     
-              // Get offering details
-              const offeringResponse = await api.get(`/seller/${firstOfferingId}`)
-              const offeringData = offeringResponse.data.data
-              console.log(offeringData)
+                    // Log the entire offerings array to inspect its structure
+                    console.log("Offerings Array:", offerings);
     
-              // Get reviews
-              const reviewsResponse = await api.get(`/reviews/${firstOfferingId}`)
-              const reviews = reviewsResponse.data.data || []
-              console.log(reviews)
+                    // Check if offerings array is populated
+                    if (!offerings || offerings.length === 0) {
+                        console.error(`No offerings found for seller ${seller.id}`);
+                        continue; // Skip to next seller
+                    }
     
-              // Complete the product object
-              product.offering = offeringData
-              product.reviews = reviews
-              product.rating = offeringData.rating || 0
-              product.ratingCount = reviews.length
-              product.details = {
-                category: productData.categoryName,
-                // Add other details as needed
-              }
+                    // Log each offering to ensure productId is available
+                    offerings.forEach(offering => console.log("Offering:", offering));
+    
+                    // Find the correct offering for the current productId
+                    offeringData = offerings.find(offering => Number(offering.productId) === Number(productId));
+    
+                    // Log the result of the find operation
+                    console.log("OfferingData from find:", offeringData);
+    
+                    // If we found the correct offering, break the loop
+                    if (offeringData) {
+                        console.log("Found offering:", offeringData);
+                        break;  // Exit loop after finding the offering
+                    }
+                }
             }
     
-            this.currentProduct = product
-            return product
-          } catch (error) {
-            console.error(`Error fetching product ${productId}:, error`)
-            this.error = error.message || 'Failed to fetch product details'
-            return null
-          } finally {
-            this.loading = false
-          }
-        },
+            // If we found a valid offering, fetch reviews for it
+            if (offeringData) {
+                // Fetch reviews for the offering
+                try {
+                    const reviewsResponse = await api.get(`/reviews/${offeringData.id}`);
+                    reviews = reviewsResponse.data.data || [];
+                } catch (reviewError) {
+                    console.warn(`No reviews found for offering ID: ${offeringData.id}`);
+                }
+    
+                // Complete the product object with offering and reviews
+                product.offering = offeringData;
+                product.reviews = reviews || [];
+                product.rating = offeringData.rating || 0;
+                product.ratingCount = reviews.length;
+    
+                // Add product details (you can add other details as necessary)
+                product.details = {
+                    category: productData.categoryName,
+                };
+            } else {
+                console.warn(`No valid offering found for product ID: ${productId}`);
+            }
+    
+            // Assign the complete product to currentProduct
+            this.currentProduct = product;
+            return product;
+        } catch (error) {
+            console.error(`Error fetching product ${productId}:`, error);
+            this.error = error.message || 'Failed to fetch product details';
+            return null;
+        } finally {
+            this.loading = false;
+        }
+    },
+    
         
-
         // Set current product (used when navigating from product list to detail)
         setCurrentProduct(product) {
             this.currentProduct = product
