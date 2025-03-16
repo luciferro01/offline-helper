@@ -35,7 +35,9 @@
           <span class="rating-count">{{ product.rating }} ({{ product.ratingCount }} reviews)</span>
         </div>
 
-        <div class="product-price">₹{{ formatPrice(product.offering.price) }}</div>
+        <div class="product-price" data-v-inspector="src/views/ProductDetail.vue:38:9">
+          {{ formatPrice(product.offering?.price || 0) }}
+        </div>
 
         <!-- <div class="product-price">₹{{ selectedSeller.price }}</div> -->
 
@@ -212,6 +214,7 @@ export default {
     ...mapActions(useCartStore, ['addToCart']),
 
     // Initialize product details after it's loaded
+
     initializeProductDetails() {
       if (this.product && this.product.images && this.product.images.length > 0) {
         this.selectedImage = this.product.images[0]
@@ -223,8 +226,9 @@ export default {
       }
     },
 
-    formatPrice(price) {
-      return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+    formatPrice(price, decimals = 2) {
+      const formattedPrice = parseFloat(price).toFixed(decimals)
+      return formattedPrice.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
     },
 
     formatKey(key) {
@@ -232,7 +236,7 @@ export default {
     },
 
     formatDate(dateString) {
-      console.log('Date is : ' + dateString)
+      // console.log('Date is : ' + dateString)
       const options = { year: 'numeric', month: 'long', day: 'numeric' }
       return new Date(dateString).toLocaleDateString(undefined, options)
     },
@@ -263,31 +267,98 @@ export default {
     },
 
     getPercentage(rating) {
-      console.log(rating, 'rating')
-      console.log(this.product, 'dislay if condition')
+      // console.log(rating, 'rating')
+      // console.log(this.product, 'dislay if condition')
       if (!this.product || this.product.ratingCount === 0) return 0
 
       const count = this.product[rating] || 0
       return Math.round((count / this.product.ratingCount) * 100)
     },
 
+    //     async handleAddToCart() {
+    //       if (!this.product || !this.selectedSeller) {
+    //         return
+    //       }
+
+    //       this.isAddingToCart = true
+    //       this.addToCartError = null
+
+    //       const cart = useCartStore();  // This ensures you're using the store correctly
+
+    // const isProductInCart = cart.items.some(item =>
+    //   item.productId === this.product.id && item.sellerId === this.selectedSellerId
+    // )
+
+    //   if (isProductInCart) {
+    //     this.addToCartError = "This product is already in your cart"
+    //     this.isAddingToCart = false
+    //     return
+    //   }
+    // else{
+    //       try {
+    //         // Get the selected product offering ID (which appears to be the seller ID in your case)
+    //         console.log("seller" +this.selectedSeller)
+    //         const productOfferingId = this.selectedSeller.id
+
+    //         // Call the store's addToCart method with the correct parameters
+    //         const result = await this.addToCart(productOfferingId, this.quantity)
+
+    //         if (result.success) {
+    //           // Show confirmation and navigate to cart
+    //           this.$router.push('/cart')
+    //         } else {
+    //           this.addToCartError = result.error || 'Failed to add item to cart'
+    //         }
+    //       } catch (error) {
+    //         console.error('Error adding to cart:', error)
+    //         this.addToCartError = error.message || 'An unexpected error occurred'
+    //       } finally {
+    //         this.isAddingToCart = false
+    //       }
+    //     }
+    //   },
+
+    //   },
     async handleAddToCart() {
-      if (!this.product || !this.selectedSeller) {
+      if (!this.product || !this.selectedSeller.id) {
+        this.addToCartError = 'Please select a seller before adding to cart.'
         return
       }
 
       this.isAddingToCart = true
       this.addToCartError = null
 
-      try {
-        // Get the selected product offering ID (which appears to be the seller ID in your case)
-        const productOfferingId = this.selectedSeller.id
+      const cart = useCartStore() // This ensures you're using the store correctly
 
-        // Call the store's addToCart method with the correct parameters
+      console.log('Product ID:', this.product.id)
+      console.log('Selected Seller ID:', this.selectedSeller.id)
+
+      let isProductInCart = false
+
+      for (let item of cart.items) {
+        // console.log(item.productOfferingId)
+        // console.log(this.product.offering.id)
+
+        if (item.productOfferingId === this.product.offering.id) {
+          isProductInCart = true
+          break
+        }
+      }
+
+      if (isProductInCart) {
+        this.addToCartError = 'This product is already in your cart'
+        this.isAddingToCart = false
+        return
+      }
+
+      try {
+        console.log(this.product.offering.id)
+        const productOfferingId = this.product.offering.id
+        console.log('Adding product to cart:', productOfferingId, this.quantity)
+
         const result = await this.addToCart(productOfferingId, this.quantity)
 
         if (result.success) {
-          // Show confirmation and navigate to cart
           this.$router.push('/cart')
         } else {
           this.addToCartError = result.error || 'Failed to add item to cart'
@@ -300,12 +371,11 @@ export default {
       }
     },
   },
-
   mounted() {
     try {
       console.log('Fetching product with ID:', this.productId)
       this.fetchProductById(this.productId)
-      console.log('Product data received:', this.product)
+      // console.log('Product data received:', this.product)
       this.initializeProductDetails()
     } catch (error) {
       console.error('Error loading product details:', error)

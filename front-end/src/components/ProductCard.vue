@@ -48,7 +48,6 @@ export default {
 
     navigateToProduct() {
       console.log('Navigating to product:', this.product.id)
-
       // Store the product data in Pinia store
       this.setCurrentProduct(this.product)
 
