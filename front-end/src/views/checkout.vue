@@ -163,7 +163,7 @@ export default {
           // Redirect to homepage after 3 seconds
           setTimeout(() => {
             router.push('/')
-          }, 3000)
+          }, 5000)
         } else {
           // Unexpected status code
           console.error('Unexpected status code:', response.status)

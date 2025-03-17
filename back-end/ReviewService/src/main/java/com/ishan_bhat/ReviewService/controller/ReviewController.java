@@ -27,6 +27,7 @@ public class ReviewController {
 
     @GetMapping("/{offeringId}")
     public ResponseEntity<CommonResponse<List<ReviewDto>>> getReviewsByOfferingId(@PathVariable Long offeringId) {
+        System.out.println("yeah i came");
         List<ReviewDto> reviews = reviewService.getReviewsByOfferingId(offeringId);
         return ResponseEntity.ok(CommonResponse.success(reviews, HttpStatus.OK.value(), "Success"));
     }

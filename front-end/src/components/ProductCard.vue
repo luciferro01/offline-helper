@@ -4,6 +4,7 @@
       <img :src="product.productImage" :alt="product.name" />
       <slot name="badge"></slot>
     </div>
+    
     <div class="product-info">
       <h3 class="product-name">{{ product.productName }}</h3>
       <div class="product-price">₹{{ formatPrice(product.price) }}</div>
@@ -47,9 +48,9 @@ export default {
     },
 
     navigateToProduct() {
-      console.log('Navigating to product:', this.product.id)
+      console.log('Navigating to product:', this.product.productId)
       // Store the product data in Pinia store
-      this.setCurrentProduct(this.product)
+      this.setCurrentProduct(this.product.productId)
 
       // Navigate to product detail page
       this.$router.push({

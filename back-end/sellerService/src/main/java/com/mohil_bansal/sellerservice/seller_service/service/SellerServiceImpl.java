@@ -199,6 +199,7 @@ public class SellerServiceImpl implements SellerService {
         kafkaTemplate.send("product-updates", String.valueOf(searchProductOfferingDto.getId()), updateEvent);
 
         ProductOfferingDto updatedOfferingDto = convertToDto(offering);
+        System.out.println(updatedOfferingDto);
         return convertToDto(offering);
     }
 

@@ -42,14 +42,15 @@ export default {
     },
 
     navigateToProduct() {
-      // In Vue Router 4, we use different syntax for navigation with state
+      console.log('Navigating to product:', this.product.productId)
+      // Store the product data in Pinia store
+      
+
+      // Navigate to product detail page
       this.$router.push({
         name: 'ProductDetail',
-        params: { id: this.product.id },
+        params: { productId: this.product.productId },
       })
-
-      // Store product data in localStorage instead
-      localStorage.setItem('productData', JSON.stringify(this.product))
     },
   },
 }

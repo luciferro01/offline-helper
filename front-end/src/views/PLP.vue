@@ -17,8 +17,13 @@
     </div>
 
     <div v-else-if="paginatedProducts.length > 0" class="products-grid">
-      <ProductCard v-for="product in paginatedProducts" :key="product.id" :product="product" />
-    </div>
+  <ProductCard
+    v-for="product in paginatedProducts"
+    :key="product.id"
+    :product="product"
+    
+  />
+</div>
 
     <div v-else class="empty-products">
       <p>No products found matching your search.</p>
@@ -128,6 +133,8 @@ export default {
       productStore.clearError()
       performSearch()
     }
+
+    
 
     // Get paginated products from store
     const paginatedProducts = computed(() => {

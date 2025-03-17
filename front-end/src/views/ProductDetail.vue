@@ -20,7 +20,14 @@
 
       <!-- Product Info Section -->
       <div class="product-info">
-        <h1 class="product-name">{{ product.name }}</h1>
+        <h1 class="product-name">
+  <template v-if="selectedOffering?.name">
+    {{ selectedOffering.name }}
+  </template>
+  <template v-else>
+    {{ product.name }}
+  </template>
+</h1>
 
         <div class="product-rating">
           <div class="stars">
@@ -32,22 +39,21 @@
               >★</span
             >
           </div>
-          <span class="rating-count">{{ product.rating }} ({{ product.ratingCount }} reviews)</span>
+          
+          <!-- <span class="rating-count">{{ product.rating }} ({{ product.ratingCount }} reviews)</span> -->
+          <span class="rating-count">{{ product.ratingCount ? product.rating + ' (' + product.ratingCount + ' reviews)' : '' }}</span>
+
         </div>
 
-        <div class="product-price" data-v-inspector="src/views/ProductDetail.vue:38:9">
-          {{ formatPrice(product.offering?.price || 0) }}
-        </div>
-
-        <!-- <div class="product-price">₹{{ selectedSeller.price }}</div> -->
+        <div class="product-price">
+  ₹{{ formatPrice(selectedOffering?.price || 0) }}
+</div>
 
         <div class="seller-section">
           <label for="seller-select">Seller:</label>
           <select id="seller-select" v-model="selectedSellerId" @change="updateSelectedSeller">
             <option v-for="seller in product.sellers" :key="seller.id" :value="seller.id">
-              <!-- {{ seller.name }} - ₹{{ formatPrice(seller.price) }} -->
               {{ seller.name }}
-              <!-- - ₹{{ seller.price }} -->
             </option>
           </select>
         </div>
@@ -79,12 +85,12 @@
           </div>
         </div>
 
-        <!-- UPDATED: Add to Cart button with loading state -->
+        <!-- Add to Cart button with loading state -->
         <button class="add-to-cart-btn" @click="handleAddToCart" :disabled="isAddingToCart">
           {{ isAddingToCart ? 'Adding...' : 'Add to Cart' }}
         </button>
 
-        <!-- NEW: Error message display -->
+        <!-- Error message display -->
         <div v-if="addToCartError" class="error-message">
           {{ addToCartError }}
         </div>
@@ -102,7 +108,8 @@
 
     <!-- Reviews Section -->
     <div class="reviews-section">
-      <h2>Customer Reviews</h2>
+     
+      <!-- <h2>Customer Reviews</h2>
       <div class="review-summary">
         <div class="avg-rating">
           <span class="rating-number">{{ product.rating }}</span>
@@ -117,48 +124,70 @@
           </div>
           <span>{{ product.ratingCount }} reviews</span>
         </div>
-        <div class="rating-bars">
-          <div v-for="i in 5" :key="i" class="rating-bar-container">
-            <span class="star-label">{{ 6 - i }} star</span>
-            <div class="rating-bar">
-              <div class="rating-bar-fill" :style="{ width: `${getPercentage(6 - i)}%` }"></div>
-            </div>
-            <span class="rating-percent">{{ getPercentage(6 - i) }}%</span>
-          </div>
+        <div v-for="i in 5" :key="i" class="rating-bar-container">
+  <span class="star-label">{{ 6 - i }} star</span>
+  <div class="rating-bar">
+    <div 
+      class="rating-bar-fill" 
+      :style="{ width: `${(product.rating >= i) ? 100 : 0}%` }">
+    </div>
+  </div>
+  
+</div>
+</div> -->
+
+<div class="reviews-section">
+  <h2>Customer Reviews</h2>
+  
+  <!-- Check if there are reviews before displaying the review count -->
+  <div v-if="product.reviews && product.reviews.length > 0" class="review-summary">
+    <div class="avg-rating">
+      <span class="rating-number">{{ product.rating }}</span>
+      <div class="stars">
+        <span
+          v-for="star in 5"
+          :key="star"
+          class="star"
+          :class="{ filled: star <= Math.round(product.rating) }"
+          >★</span
+        >
+      </div>
+      <span>{{ product.ratingCount }} reviews</span>
+    </div>
+  </div>
+
+  <!-- If there are no reviews, show a message -->
+  <div v-else>
+   
+    <p>No reviews yet. Be the first to review this product!</p>
+  </div>
+
+  <!-- Reviews List -->
+  <div v-if="product.reviews && product.reviews.length > 0" class="reviews-list">
+    <div v-for="review in product.reviews" :key="review.id" class="review-item">
+      <div class="review-header">
+        <div class="review-user">Anonymous User</div>
+        <div class="review-date">{{ formatDate(review.createdAt) }}</div>
+      </div>
+
+      <div class="review-rating">
+        <div class="stars">
+          <span
+            v-for="star in 5"
+            :key="star"
+            class="star"
+            :class="{ filled: star <= review.rating }"
+            >★</span
+          >
         </div>
       </div>
 
-      <div class="reviews-list">
-        <div v-for="review in product.reviews" :key="review.id" class="review-item">
-          <div class="review-header">
-            <!-- <div class="review-user">{{ review.userName }}</div> -->
-            <div class="review-user">Anonymous User</div>
-            <div class="review-date">{{ formatDate(review.createdAt) }}</div>
-          </div>
-          <div class="review-rating">
-            <div class="stars">
-              <span
-                v-for="star in 5"
-                :key="star"
-                class="star"
-                :class="{ filled: star <= review.rating }"
-                >★</span
-              >
-            </div>
-          </div>
-          <div class="review-title">{{ review.title }}</div>
-          <div class="review-content">{{ review.content }}</div>
-          <div class="review-helpful">
-            <span>Was this review helpful?</span>
-            <button class="helpful-btn">Yes</button>
-            <button class="helpful-btn">No</button>
-          </div>
-        </div>
-      </div>
+      <div class="review-content">{{ review.reviewText }}</div>
     </div>
   </div>
-  <div v-else-if="loading" class="loading">Loading product details...</div>
-  <div v-else-if="error" class="error">
+</div>
+</div>
+
     {{ error }}
   </div>
 </template>
@@ -167,27 +196,16 @@
 import { mapState, mapActions } from 'pinia'
 import { useProductStore } from '@/stores/productStore'
 import { useCartStore } from '@/stores/cartStore'
+import api from '@/services/apiService'
 
 export default {
   name: 'ProductDetail',
-
+  
   props: {
     productId: {
       type: [Number, String],
       required: true,
     },
-    // productOfferingId: {
-    //   type: [String, Number],
-    //   required: true,
-    // },
-    // productId: {
-    //   type: Number,
-    //   required: true,
-    // },
-    // sellerId: {
-    //   type: Number,
-    //   required: true,
-    // },
   },
 
   data() {
@@ -195,6 +213,7 @@ export default {
       selectedImage: '',
       selectedSellerId: null,
       selectedSeller: {},
+      selectedOffering: {}, // Store the selected offering here
       quantity: 1,
       isAddingToCart: false,
       addToCartError: null,
@@ -212,8 +231,6 @@ export default {
   methods: {
     ...mapActions(useProductStore, ['fetchProductById']),
     ...mapActions(useCartStore, ['addToCart']),
-
-    // Initialize product details after it's loaded
 
     initializeProductDetails() {
       if (this.product && this.product.images && this.product.images.length > 0) {
@@ -236,18 +253,145 @@ export default {
     },
 
     formatDate(dateString) {
-      // console.log('Date is : ' + dateString)
       const options = { year: 'numeric', month: 'long', day: 'numeric' }
       return new Date(dateString).toLocaleDateString(undefined, options)
     },
 
-    updateSelectedSeller() {
-      if (this.product && this.product.sellers) {
-        this.selectedSeller = this.product.sellers.find(
-          (seller) => seller.id === this.selectedSellerId,
-        )
-      }
-    },
+//     updateSelectedSeller() {
+//   const selectedSeller = this.product.sellers.find(seller => seller.id === this.selectedSellerId);
+  
+//   if (selectedSeller) {
+//     // Fetch the offerings for the selected seller
+//     api.get(`/seller/${selectedSeller.id}/offerings`)
+//       .then(response => {
+//         const offerings = response.data.data;
+//         const selectedOffering = offerings.find(offering => offering.sellerId === selectedSeller.id);
+
+//         if (selectedOffering) {
+//           // Update the selected offering details
+//           this.selectedOffering = selectedOffering;
+//           this.selectedImage = selectedOffering.images ? selectedOffering.images[0] : '';
+
+//           // Update the product name and price based on the selected offering
+//           this.product.name = selectedOffering.name;  // Update product name with offering name
+//           this.product.rating = selectedOffering.rating;  // Update product rating with offering rating
+//           this.product.ratingCount = selectedOffering.ratingCount;  // Update the count of reviews
+//           this.product.reviews = selectedOffering.reviews;  // Update reviews from the selected offering
+          
+//           // Optionally update other details of the product if necessary
+//           this.$nextTick(() => {
+//             console.log("Updated product details:", this.product);
+//           });
+//         } else {
+//           console.error('No offering found for this seller');
+//         }
+//       })
+//       .catch(error => {
+//         console.error("Error fetching offerings:", error);
+//       });
+//   } else {
+//     console.error('Selected seller not found');
+//   }
+// },
+
+// updateSelectedSeller() {
+//       const selectedSeller = this.product.sellers.find(
+//         (seller) => seller.id === this.selectedSellerId,
+//       );
+
+//       if (selectedSeller) {
+//         // Fetch the offerings for the selected seller
+//         api.get(`/seller/${selectedSeller.id}/offerings`)
+//           .then((response) => {
+//             const offerings = response.data.data;
+
+           
+
+//             // Find the offering for the *current product ID* from the offerings of the selected seller.
+//             const selectedOffering = offerings.find(
+//               (offering) => Number(offering.productId) === Number(this.productId)
+//             );
+
+//             // console.log(response);
+
+//             if (selectedOffering) {
+//               this.selectedOffering = selectedOffering;
+//               this.product.rating = selectedOffering.rating;
+//               this.product.ratingCount = selectedOffering.ratingCount;
+
+//               this.product.reviews = selectedOffering.reviews;
+//               console.log("updates of offerings")
+//               console.log(selectedOffering)
+              
+
+//             } else {
+//               console.error('No offering found for this seller and product ID.');
+//               this.selectedOffering = null; // Clear the selected offering
+//             }
+//           })
+//           .catch((error) => {
+//             console.error('Error fetching offerings:', error);
+//             this.selectedOffering = null; // Clear the selected offering
+//           });
+//       } else {
+//         console.error('Selected seller not found');
+//         this.selectedOffering = null; // Clear the selected offering
+//       }
+      
+      
+//     },
+updateSelectedSeller() {
+  const selectedSeller = this.product.sellers.find(
+    (seller) => seller.id === this.selectedSellerId,
+  );
+
+  if (selectedSeller) {
+    // Fetch the offerings for the selected seller
+    api.get(`/seller/${selectedSeller.id}/offerings`)
+      .then((response) => {
+        const offerings = response.data.data;
+
+        // Find the offering for the *current product ID* from the offerings of the selected seller.
+        const selectedOffering = offerings.find(
+          (offering) => Number(offering.productId) === Number(this.productId)
+        );
+
+        if (selectedOffering) {
+          this.selectedOffering = selectedOffering;
+
+          // Update product details with the selected offering's rating and rating count
+          this.product.rating = selectedOffering.rating;
+          this.product.ratingCount = selectedOffering.ratingCount;
+
+          // Fetch reviews for this offering
+          api.get(`/reviews/${selectedOffering.id}`)
+            .then((reviewsResponse) => {
+              const reviews = reviewsResponse.data.data || [];
+              this.product.reviews = reviews; // Update the product's reviews
+              console.log("Updated reviews for the selected offering:", reviews);
+            })
+            .catch((reviewError) => {
+              console.warn(`No reviews found for offering ID: ${selectedOffering.id}`);
+              this.product.reviews = []; // In case no reviews are found
+            });
+
+          console.log("Updated offering:", selectedOffering);
+
+        } else {
+          console.error('No offering found for this seller and product ID.');
+          this.selectedOffering = null; // Clear the selected offering
+        }
+      })
+      .catch((error) => {
+        console.error('Error fetching offerings:', error);
+        this.selectedOffering = null; // Clear the selected offering
+      });
+  } else {
+    console.error('Selected seller not found');
+    this.selectedOffering = null; // Clear the selected offering
+  }
+},
+
 
     increaseQuantity() {
       this.quantity++
@@ -260,65 +404,17 @@ export default {
     },
 
     validateQuantity() {
-      // Make sure quantity is at least 1
       if (this.quantity < 1 || isNaN(this.quantity)) {
         this.quantity = 1
       }
     },
 
     getPercentage(rating) {
-      // console.log(rating, 'rating')
-      // console.log(this.product, 'dislay if condition')
       if (!this.product || this.product.ratingCount === 0) return 0
-
       const count = this.product[rating] || 0
       return Math.round((count / this.product.ratingCount) * 100)
     },
 
-    //     async handleAddToCart() {
-    //       if (!this.product || !this.selectedSeller) {
-    //         return
-    //       }
-
-    //       this.isAddingToCart = true
-    //       this.addToCartError = null
-
-    //       const cart = useCartStore();  // This ensures you're using the store correctly
-
-    // const isProductInCart = cart.items.some(item =>
-    //   item.productId === this.product.id && item.sellerId === this.selectedSellerId
-    // )
-
-    //   if (isProductInCart) {
-    //     this.addToCartError = "This product is already in your cart"
-    //     this.isAddingToCart = false
-    //     return
-    //   }
-    // else{
-    //       try {
-    //         // Get the selected product offering ID (which appears to be the seller ID in your case)
-    //         console.log("seller" +this.selectedSeller)
-    //         const productOfferingId = this.selectedSeller.id
-
-    //         // Call the store's addToCart method with the correct parameters
-    //         const result = await this.addToCart(productOfferingId, this.quantity)
-
-    //         if (result.success) {
-    //           // Show confirmation and navigate to cart
-    //           this.$router.push('/cart')
-    //         } else {
-    //           this.addToCartError = result.error || 'Failed to add item to cart'
-    //         }
-    //       } catch (error) {
-    //         console.error('Error adding to cart:', error)
-    //         this.addToCartError = error.message || 'An unexpected error occurred'
-    //       } finally {
-    //         this.isAddingToCart = false
-    //       }
-    //     }
-    //   },
-
-    //   },
     async handleAddToCart() {
       if (!this.product || !this.selectedSeller.id) {
         this.addToCartError = 'Please select a seller before adding to cart.'
@@ -328,17 +424,11 @@ export default {
       this.isAddingToCart = true
       this.addToCartError = null
 
-      const cart = useCartStore() // This ensures you're using the store correctly
-
-      console.log('Product ID:', this.product.id)
-      console.log('Selected Seller ID:', this.selectedSeller.id)
+      const cart = useCartStore()
 
       let isProductInCart = false
 
       for (let item of cart.items) {
-        // console.log(item.productOfferingId)
-        // console.log(this.product.offering.id)
-
         if (item.productOfferingId === this.product.offering.id) {
           isProductInCart = true
           break
@@ -352,10 +442,8 @@ export default {
       }
 
       try {
-        console.log(this.product.offering.id)
         const productOfferingId = this.product.offering.id
-        console.log('Adding product to cart:', productOfferingId, this.quantity)
-
+        
         const result = await this.addToCart(productOfferingId, this.quantity)
 
         if (result.success) {
@@ -371,11 +459,11 @@ export default {
       }
     },
   },
+
   mounted() {
     try {
       console.log('Fetching product with ID:', this.productId)
       this.fetchProductById(this.productId)
-      // console.log('Product data received:', this.product)
       this.initializeProductDetails()
     } catch (error) {
       console.error('Error loading product details:', error)
@@ -383,12 +471,14 @@ export default {
   },
 
   watch: {
-    // Watch for changes in the product data
     currentProduct: {
       handler() {
         this.initializeProductDetails()
       },
       immediate: true,
+    },
+    selectedSellerId() {
+      this.updateSelectedSeller();  // Triggering seller update when selected seller changes
     },
   },
 }
@@ -532,173 +622,125 @@ export default {
 
 .product-description h3 {
   margin-bottom: 0.5rem;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
+  color: #333;
 }
 
 .product-description p {
-  line-height: 1.6;
-  color: #444;
+  color: #666;
+  line-height: 1.5;
 }
 
+/* Quantity Section */
 .quantity-section {
+  display: flex;
+  gap: 0.5rem;
   margin-bottom: 1.5rem;
 }
 
 .quantity-section label {
-  display: block;
-  margin-bottom: 0.5rem;
   font-weight: 500;
 }
 
 .quantity-controls {
   display: flex;
   align-items: center;
-  width: fit-content;
 }
 
 .quantity-btn {
-  width: 40px;
-  height: 40px;
-  background-color: #f0f0f0;
+  background-color: #f4f4f4;
   border: 1px solid #ddd;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
+  padding: 0.5rem;
   cursor: pointer;
 }
 
-.quantity-btn:first-child {
-  border-radius: 4px 0 0 4px;
+.quantity-btn:disabled {
+  cursor: not-allowed;
 }
 
-.quantity-btn:last-child {
-  border-radius: 0 4px 4px 0;
-}
-
-.quantity-btn.delete-btn {
-  background-color: #ffecec;
-  color: #ff4f4f;
-}
-
-.trash-icon {
-  font-size: 1rem;
-}
-
-.quantity-controls input {
-  width: 60px;
-  height: 40px;
-  border: 1px solid #ddd;
-  border-left: none;
-  border-right: none;
+input[type="number"] {
+  width: 50px;
+  padding: 0.5rem;
   text-align: center;
   font-size: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
 }
 
 .add-to-cart-btn {
-  width: 100%;
-  padding: 1rem;
   background-color: #0095da;
   color: white;
+  padding: 1rem;
+  font-size: 1.1rem;
   border: none;
   border-radius: 4px;
-  font-size: 1rem;
-  font-weight: bold;
   cursor: pointer;
-  margin-bottom: 1.5rem;
-  transition: background-color 0.2s;
 }
 
-.add-to-cart-btn:hover {
-  background-color: #0085c5;
+.add-to-cart-btn:disabled {
+  background-color: #ccc;
+}
+
+.error-message {
+  color: red;
+  font-size: 1rem;
+  margin-top: 1rem;
 }
 
 .product-details {
-  border-top: 1px solid #eee;
-  padding-top: 1.5rem;
+  margin-top: 2rem;
 }
 
 .product-details h3 {
+  font-size: 1.3rem;
   margin-bottom: 1rem;
-  font-size: 1.1rem;
 }
 
 .product-details ul {
   list-style: none;
-  padding: 0;
+  padding-left: 0;
 }
 
 .product-details li {
-  margin-bottom: 0.5rem;
-  display: flex;
-  line-height: 1.5;
-}
-
-.product-details li strong {
-  min-width: 130px;
+  font-size: 1rem;
   color: #666;
+  margin-bottom: 0.5rem;
 }
-
 /* Reviews Section */
 .reviews-section {
   margin-top: 3rem;
-  border-top: 1px solid #eee;
-  padding-top: 2rem;
 }
 
 .reviews-section h2 {
-  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  color: #333;
+  margin-bottom: 1rem;
 }
 
 .review-summary {
-  display: flex;
-  gap: 2rem;
   margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid #eee;
-}
-
-@media (max-width: 768px) {
-  .review-summary {
-    flex-direction: column;
-  }
 }
 
 .avg-rating {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  padding-right: 2rem;
-  border-right: 1px solid #eee;
-}
-
-@media (max-width: 768px) {
-  .avg-rating {
-    border-right: none;
-    border-bottom: 1px solid #eee;
-    padding-right: 0;
-    padding-bottom: 1rem;
-    margin-bottom: 1rem;
-  }
+  margin-bottom: 1rem;
 }
 
 .rating-number {
-  font-size: 3rem;
+  font-size: 2rem;
   font-weight: bold;
-  color: #333;
-  line-height: 1;
-  margin-bottom: 0.5rem;
-}
-
-.avg-rating .stars {
-  font-size: 1.5rem;
-  margin-bottom: 0.5rem;
+  color: #f5a623;
+  margin-right: 0.5rem;
 }
 
 .rating-bars {
-  flex: 1;
+  margin-top: 1rem;
 }
 
+/* Rating Bars */
 .rating-bar-container {
   display: flex;
   align-items: center;
@@ -706,91 +748,96 @@ export default {
 }
 
 .star-label {
-  width: 60px;
+  margin-right: 10px;
   font-size: 0.9rem;
-  color: #666;
+  color: #333;
 }
 
 .rating-bar {
-  flex: 1;
+  width: 100%;
   height: 10px;
   background-color: #f0f0f0;
   border-radius: 5px;
-  overflow: hidden;
-  margin: 0 1rem;
+  margin-right: 10px;
+  position: relative;
 }
 
 .rating-bar-fill {
   height: 100%;
   background-color: #f5a623;
+  border-radius: 5px;
 }
+
 
 .rating-percent {
-  width: 40px;
   font-size: 0.9rem;
-  color: #666;
+  color: #333;
 }
 
+/* Individual Review Item Styling */
 .reviews-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+  margin-top: 2rem;
 }
 
 .review-item {
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid #eee;
+  background-color: #f9f9f9;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
 }
 
 .review-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .review-user {
-  font-weight: 500;
+  font-weight: 600;
+  color: #333;
 }
 
 .review-date {
-  color: #666;
   font-size: 0.9rem;
+  color: #666;
 }
 
 .review-rating {
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .review-title {
-  font-weight: 500;
-  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  color: #333;
 }
 
 .review-content {
-  line-height: 1.6;
-  color: #444;
+  font-size: 1rem;
+  color: #666;
+  line-height: 1.5;
   margin-bottom: 1rem;
 }
 
 .review-helpful {
   display: flex;
+  gap: 1rem;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  color: #666;
 }
 
 .helpful-btn {
-  background-color: #f0f0f0;
-  border: 1px solid #ddd;
-  padding: 0.25rem 0.5rem;
-  border-radius: 3px;
+  background-color: #f5a623;
+  border: none;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
   cursor: pointer;
 }
 
-.error-message {
-  color: #dc3545;
-  margin-top: 10px;
-  font-size: 0.9rem;
+.helpful-btn:hover {
+  background-color: #d48814;
 }
+
 </style>

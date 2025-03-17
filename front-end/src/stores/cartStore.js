@@ -116,34 +116,71 @@ export const useCartStore = defineStore('cart', {
       }
     },
 
-    async updateQuantity(itemId, quantity) {
-      this.loading = true
-      this.error = null
+    // async updateQuantity(itemId, quantity) {
+    //   this.loading = true
+    //   this.error = null
 
+    //   try {
+    //     const userStore = useUserStore()
+
+    //     // Check if user is logged in
+    //     if (!userStore.loggedIn) {
+    //       throw new Error('User not authenticated')
+    //     }
+
+    //     // The JWT token will be added in the header by the interceptor
+    //     // Changed to match the backend endpoint and parameters
+    //     await api.put(`/carts/updateCartItem?itemId=${itemId}`, {
+    //       quantity,
+    //     })
+
+    //     // Refresh cart
+    //     await this.fetchCart()
+
+    //     return { success: true }
+    //   } catch (error) {
+    //     console.error('Error updating quantity:', error)
+    //     this.error = error.message
+    //     return { success: false, error: this.error }
+    //   } finally {
+    //     this.loading = false
+    //   }
+    // },
+
+    async updateQuantity(itemId, quantity) {
+      this.loading = true;
+      this.error = null;
+            console.log("Item value in update " + itemId)
       try {
-        const userStore = useUserStore()
+        const userStore = useUserStore();
 
         // Check if user is logged in
         if (!userStore.loggedIn) {
-          throw new Error('User not authenticated')
+          throw new Error('User not authenticated');
         }
 
         // The JWT token will be added in the header by the interceptor
         // Changed to match the backend endpoint and parameters
         await api.put(`/carts/updateCartItem?itemId=${itemId}`, {
           quantity,
-        })
+        });
 
-        // Refresh cart
-        await this.fetchCart()
+        // Find the item within our STORE items array and REPLACE it (not modify).
+        this.cartItems = this.cartItems.map(item => {
+          if (item.id === itemId) {
+            return { ...item, quantity: quantity }; // Create a new object.
+          }
+          return item;
+        });
 
-        return { success: true }
+
+        return { success: true };
       } catch (error) {
-        console.error('Error updating quantity:', error)
-        this.error = error.message
-        return { success: false, error: this.error }
+        console.error('Error updating quantity:', error);
+        this.error = error.message;
+        return { success: false, error: this.error };
       } finally {
-        this.loading = false
+        this.loading = false;
       }
     },
 

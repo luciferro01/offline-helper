@@ -58,12 +58,7 @@
     </div>
 
     <!-- Debug panel - remove in production -->
-    <div v-if="showDebug" class="debug-panel">
-      <h3>Debug Information</h3>
-      <button @click="toggleDebug" class="debug-toggle">Hide Debug</button>
-      <pre>{{ JSON.stringify(cartItems, null, 2) }}</pre>
-    </div>
-    <button v-else @click="toggleDebug" class="debug-toggle">Show Debug</button>
+    
   </div>
 </template>
 

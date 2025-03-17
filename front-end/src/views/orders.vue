@@ -25,7 +25,7 @@
         <div class="product-card">
           <div class="product-image">
             <img
-              :src="order.productImageUrl = 'https://via.placeholder.com/150'"
+              :src=order.productImageUrl 
               alt="Product Image"
             />
           </div>
@@ -35,12 +35,19 @@
             <p class="product-quantity">Quantity: {{ order.quantity || 1 }}</p>
             <br />
             <router-link
-              v-if="order.productOfferingId"
+              v-if="order.productOfferingId && !hasReviewed(order.productOfferingId)"
               :to="`/review/${order.productOfferingId}`"
               class="review-btn"
             >
               Add review
             </router-link>
+            <button
+              v-else
+              class="review-btn"
+              :disabled="true"
+            >
+              Review Done
+            </button>
           </div>
         </div>
 
@@ -62,17 +69,11 @@
     <button class="go-home" @click="goToHomePage">Go to Homepage</button>
 
     <!-- Debug information section -->
-    <div class="debug-info" v-if="showDebug">
-      <h3>Debug Information</h3>
-      <button @click="toggleDebug" class="debug-toggle">Hide Debug Info</button>
-      <p><strong>Orders Count:</strong> {{ orderStore.orders ? orderStore.orders.length : 0 }}</p>
-      <pre>{{ JSON.stringify(orderStore.orders, null, 2) }}</pre>
-    </div>
-    <button v-else @click="toggleDebug" class="debug-toggle">Show Debug Info</button>
+    
   </div>
 </template>
 
-<script>
+<!-- <script>
 import { useOrderStore } from '@/stores/orderstore'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -137,8 +138,177 @@ export default {
     }
   },
 }
-</script>
+</script> -->
+<script>
+import { useOrderStore } from '@/stores/orderstore'
+import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import api from '@/services/apiService'
 
+export default {
+  setup() {
+    const orderStore = useOrderStore()
+    const router = useRouter()
+    const showDebug = ref(false)
+    const reviewedOrders = ref([])
+
+    // Fetch orders when the component mounts
+    onMounted(async () => {
+      try {
+        await orderStore.fetchOrders()
+        console.log('Orders fetched:', orderStore.orders)
+        await fetchReviewsForOrders()
+      } catch (error) {
+        console.error('Error in component while fetching orders:', error)
+      }
+    })
+
+    // Fetch reviews and store them for checking
+//     const fetchReviewsForOrders = async () => {
+//   try {
+//     const promises = orderStore.orders.map(async (order) => {
+//       // console.log(order.productOfferingId)
+//       // const response = await fetch(`/reviews/${order.productOfferingId}`);
+//       axios.get(`/reviews/${order.productOfferingId}`)
+//   .then(response => {
+//     // response.data is already parsed as a JavaScript object
+//     if (response.data.success) {
+//       const userReviewed = response.data.data.some(review => review.userId === orderStore.user.id);
+//       if (userReviewed) {
+//         reviewedOrders.value.push(order.productOfferingId);
+//       }
+//     }
+//   })
+//   .catch(error => {
+//     console.error("Error fetching reviews:", error);
+//   });
+      
+//       // Check if the response is OK (status code 200-299)
+//       if (!response.ok) {
+//         throw new Error(`Failed to fetch reviews for product offering ${order.productOfferingId}: ${response.statusText}`);
+//       }
+
+//       // Parse the JSON response
+//       const data = await response.json();
+//       if (data.success) {
+//         const userReviewed = data.data.some((review) => review.userId === orderStore.user.id);
+//         if (userReviewed) {
+//           reviewedOrders.value.push(order.productOfferingId);
+//         }
+//       }
+//     });
+
+//     await Promise.all(promises);
+//   } catch (error) {
+//     console.error('Error fetching reviews:', error);
+//     // Log the response in case of error for debugging
+//     if (error.response) {
+//       console.error('Error response:', error.response);
+//     }
+//   }
+// }
+// const fetchReviewsForOrders = async () => {
+//   try {
+//     const promises = orderStore.orders.map(async (order) => {
+//       try {
+//         const response = await api.get(`/reviews/${order.productOfferingId}`);
+
+//         if (response.data.success) {
+//           // Check if *any* reviews exist for this offering
+//           const hasAnyReviews = response.data.data && response.data.data.length > 0;
+
+//           if (hasAnyReviews) {
+//             reviewedOrders.value.push(order.productOfferingId); // Mark it as reviewed if ANY reviews exist
+//           }
+//         }
+//       } catch (error) {
+//         console.error("Error fetching reviews:", error);
+//       }
+//     });
+
+//     await Promise.all(promises);
+//   } catch (error) {
+//     console.error('Error fetching reviews:', error);
+//   }
+// }
+const fetchReviewsForOrders = async () => {
+  try {
+    const promises = orderStore.orders.map(async (order) => {
+      try {
+        const response = await api.get(`/reviews/${order.productOfferingId}`);
+
+        if (response.data.success) {
+          // Check if ANY reviews exist for this offering
+          const reviews = response.data.data || [];  // Ensure `reviews` is always an array
+          console.log(reviews)
+          console.log(order)
+          
+          const userHasReviewed = reviews.some(review => review.productOfferingId === order.productOfferingId);
+
+          if (userHasReviewed) {
+            reviewedOrders.value.push(order.productOfferingId); // Mark it as reviewed if the user reviewed
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+      }
+    });
+
+    await Promise.all(promises);
+  } catch (error) {
+    console.error('Error fetching reviews:', error);
+  }
+}
+
+const hasReviewed = (offeringId) => {
+  return reviewedOrders.value.includes(offeringId);
+};
+    // Format date
+    const formatDate = (dateString) => {
+      if (!dateString) return 'N/A'
+
+      try {
+        const date = new Date(dateString)
+        return date.toLocaleDateString()
+      } catch (e) {
+        return dateString
+      }
+    }
+
+    // Format price with commas
+    const formatPrice = (price) => {
+      if (price === null || price === undefined) return '0'
+      return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+    }
+
+    // Go to homepage
+    const goToHomePage = () => {
+      router.push('/')
+    }
+
+    // Retry fetching orders
+    const retryFetch = () => {
+      orderStore.fetchOrders()
+    }
+
+    // Toggle debug information
+    const toggleDebug = () => {
+      showDebug.value = !showDebug.value
+    }
+
+    return {
+      orderStore,
+      goToHomePage,
+      formatPrice,
+      formatDate,
+      retryFetch,
+      showDebug,
+      toggleDebug,
+      hasReviewed,
+    }
+  },
+}
+</script>
 <style scoped>
 /* Your existing styles */
 .review-btn {

@@ -40,8 +40,8 @@
           <div class="nav-item">
             <router-link to="/orders" class="nav-link">
               <div class="nav-text">
-                <span class="nav-greeting">Returns</span>
-                <span class="nav-link-text">& Orders</span>
+                <!-- <span class="nav-greeting">Returns</span> -->
+                <span class="nav-link-text">Orders</span>
               </div>
             </router-link>
           </div>
