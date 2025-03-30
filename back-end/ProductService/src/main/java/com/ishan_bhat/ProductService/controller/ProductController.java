@@ -1,5 +1,6 @@
 package com.ishan_bhat.ProductService.controller;
 
+import com.ishan_bhat.ProductService.dto.CategoryDto;
 import com.ishan_bhat.ProductService.dto.ProductDto;
 import com.ishan_bhat.ProductService.service.ProductService;
 import com.ishan_bhat.ProductService.utils.CommonResponse;
@@ -12,9 +13,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.validation.Valid;
 import java.util.List;
-
+@Slf4j
 @RestController
 @RequestMapping("/products")
+@CrossOrigin(origins = "*")
 public class ProductController {
 
     private final ProductService productService;
@@ -29,11 +31,18 @@ public class ProductController {
         return ResponseEntity.ok(CommonResponse.success(products, HttpStatus.OK.value(), "Products fetched successfully"));
     }
 
+//    @GetMapping("/{productId}")
+//    public ResponseEntity<CommonResponse<ProductDto>> getProductById(@PathVariable Long productId) {
+//        System.out.println("Hello");
+//        ProductDto product = productService.getProductById(productId);
+//        return ResponseEntity.ok(CommonResponse.success(product, HttpStatus.OK.value(), "Product fetched successfully"));
+//    }
     @GetMapping("/{productId}")
-    public ResponseEntity<CommonResponse<ProductDto>> getProductById(@PathVariable Long productId) {
-        System.out.println("Hello");
+    @ResponseBody
+    public CommonResponse<ProductDto> getProductById(@PathVariable Long productId) {
+        log.info("Fetching product with ID: {}", productId);
         ProductDto product = productService.getProductById(productId);
-        return ResponseEntity.ok(CommonResponse.success(product, HttpStatus.OK.value(), "Product fetched successfully"));
+        return CommonResponse.success(product, HttpStatus.OK.value(), "Product fetched successfully");
     }
 
     @PostMapping
@@ -53,4 +62,7 @@ public class ProductController {
         productService.deleteProduct(productId);
         return ResponseEntity.noContent().build(); // No content for delete, response is CommonResponse<Void> or HttpStatus.NO_CONTENT
     }
+
+//    @GetMapping("/getCategory/{id}")
+//    public ResponseEntity<CommonResponse<CategoryDto>>
 }

@@ -3,7 +3,7 @@ package com.ishan_bhat.ProductService.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import com.fasterxml.jackson.databind.JsonNode;
+//import com.fasterxml.jackson.databind.JsonNode;
 
 @Data
 @NoArgsConstructor
@@ -11,7 +11,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 public class ProductDto {
     private Long id;
     private Long categoryId;
+    private String categoryName;
     private String name;
     private String description;
-    private JsonNode images;
+    //private JsonNode images;
+    private String imagesUrl;
 }

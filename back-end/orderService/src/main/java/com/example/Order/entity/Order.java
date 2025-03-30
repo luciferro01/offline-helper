@@ -24,6 +24,12 @@ public class Order {
     @Column(name = "product_offering_id", nullable = false)
     private Long productOfferingId;
 
+    @Column(name = "Product_Name")
+    private String productOfferingName;
+
+    @Column(name = "Image")
+    private String productImageUrl;
+
     @Column(nullable = false)
     private Integer quantity;
 
@@ -81,6 +87,22 @@ public class Order {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getProductOfferingName() {
+        return productOfferingName;
+    }
+
+    public void setProductOfferingName(String productOfferingName) {
+        this.productOfferingName = productOfferingName;
+    }
+
+    public String getProductImageUrl() {
+        return productImageUrl;
+    }
+
+    public void setProductImageUrl(String productImageUrl) {
+        this.productImageUrl = productImageUrl;
     }
 }
 

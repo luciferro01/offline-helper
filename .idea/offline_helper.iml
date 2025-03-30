@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <excludeFolder url="file://$MODULE_DIR$/.qodo" />
+      <excludeFolder url="file://$MODULE_DIR$/back-end/ProductService/.idea" />
+      <excludeFolder url="file://$MODULE_DIR$/back-end/ProductService/target" />
+      <excludeFolder url="file://$MODULE_DIR$/back-end/apiGateway/.idea" />
+      <excludeFolder url="file://$MODULE_DIR$/back-end/apiGateway/target" />
+      <excludeFolder url="file://$MODULE_DIR$/back-end/authorizationServer/.idea" />
+      <excludeFolder url="file://$MODULE_DIR$/back-end/authorizationServer/target" />
+      <excludeFolder url="file://$MODULE_DIR$/back-end/cartService/.idea" />
+      <excludeFolder url="file://$MODULE_DIR$/back-end/cartService/target" />
+      <excludeFolder url="file://$MODULE_DIR$/back-end/orderService/.idea" />
+      <excludeFolder url="file://$MODULE_DIR$/back-end/orderService/target" />
+      <excludeFolder url="file://$MODULE_DIR$/back-end/searchKafkaConsumer/.idea" />
+      <excludeFolder url="file://$MODULE_DIR$/back-end/searchKafkaConsumer/target" />
+      <excludeFolder url="file://$MODULE_DIR$/back-end/search_service/.idea" />
+      <excludeFolder url="file://$MODULE_DIR$/back-end/search_service/target" />
+      <excludeFolder url="file://$MODULE_DIR$/back-end/sellerService/.idea" />
+      <excludeFolder url="file://$MODULE_DIR$/back-end/sellerService/target" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>

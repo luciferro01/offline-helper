@@ -34,23 +34,24 @@ public class RankCalculatorService {
 
     public void updateRank(ProductOffering offering) {
         //It is creating one more document again and agin rather than updating.
-        //Trying to fix by using findById and then updating the document.
+        //Trying to fix by us ing findById and then updating the document.
 
-//        offering.setSellerRank(calculateRank(offering));
-//        productOfferingRepository.save(offering);
+        offering.setSellerRank(calculateRank(offering));
+        productOfferingRepository.save(offering);
 
+        // Fixed for now
         //TODO: Fix recreation of document again and again
-        Optional<ProductOffering> existingOffering = productOfferingRepository.findById(String.valueOf(offering.getProductOfferingId()));
-
-        if (existingOffering.isPresent()) {
-            ProductOffering offeringToUpdate = existingOffering.get();
-            offeringToUpdate.setSellerRank(calculateRank(offering));
-            productOfferingRepository.save(offeringToUpdate);
-        } else {
-            // If for some reason the document doesn't exist, just update the one we have
-            offering.setSellerRank(calculateRank(offering));
-            productOfferingRepository.save(offering);
-        }
+//        Optional<ProductOffering> existingOffering = productOfferingRepository.findById((offering.getId()));
+//
+//        if (existingOffering.isPresent()) {
+//            ProductOffering offeringToUpdate = existingOffering.get();
+//            offeringToUpdate.setSellerRank(calculateRank(offering));
+//            productOfferingRepository.save(offeringToUpdate);
+//        } else {
+//            // If for some reason the document doesn't exist, just update the one we have
+//            offering.setSellerRank(calculateRank(offering));
+//            productOfferingRepository.save(offering);
+//        }
     }
 
     public void recalculateAllSellerRanks() {

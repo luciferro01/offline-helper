@@ -5,10 +5,15 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
 import java.util.Date;
 
 @Component
 public class JwtTokenUtil {
+    public static final String ACCESS_TOKEN_PREFIX = "access:";
+    public static final String REFRESH_TOKEN_PREFIX = "refresh:";
+    public static final String USER_TOKENS_PREFIX = "user:";
+
     @Value("${jwt.secret}")
     private String secret;
 

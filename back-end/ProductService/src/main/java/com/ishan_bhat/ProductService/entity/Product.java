@@ -15,7 +15,7 @@ import javax.persistence.*;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@TypeDef(name = "jsonb-node", typeClass = JsonBinaryType.class) // Define jsonb-node type
+//@TypeDef(name = "jsonb-node", typeClass = JsonBinaryType.class) // Define jsonb-node type
 public class Product {
 
     @Id
@@ -25,15 +25,20 @@ public class Product {
     @Column(name = "category_id")
     private Long categoryId;
 
+    @Column(name = "category_name")
+    private String categoryName;
+
     @Column(name = "name")
     private String name;
 
     @Column(name = "description")
     private String description;
 
-    @Column(name = "images", columnDefinition = "jsonb") // Keep columnDefinition
-    @Type(type = "jsonb-node") // Use @Type, NO @Convert
-    private JsonNode images;
+//    @Column(name = "images", columnDefinition = "jsonb") // Keep columnDefinition
+//    @Type(type = "jsonb-node") // Use @Type, NO @Convert
+//    private JsonNode images;
+    @Column(name="images_url")
+     private String imagesUrl;
 
     @ManyToOne
     @JoinColumn(name = "category_id", insertable = false, updatable = false)

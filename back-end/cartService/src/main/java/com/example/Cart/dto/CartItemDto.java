@@ -11,6 +11,9 @@ public class CartItemDto {
     private Long id;
     private Long productOfferingId;
     private Integer quantity;
+    private String productName;
+    private Double price;
+    private String productImageUrl;
 
     public Long getId() {
         return id;

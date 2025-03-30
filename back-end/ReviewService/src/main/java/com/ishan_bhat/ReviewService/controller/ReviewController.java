@@ -15,6 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/reviews")
+@CrossOrigin(origins = "*")
 public class ReviewController {
 
     private final ReviewService reviewService;
@@ -26,13 +27,14 @@ public class ReviewController {
 
     @GetMapping("/{offeringId}")
     public ResponseEntity<CommonResponse<List<ReviewDto>>> getReviewsByOfferingId(@PathVariable Long offeringId) {
+        System.out.println("yeah i came");
         List<ReviewDto> reviews = reviewService.getReviewsByOfferingId(offeringId);
         return ResponseEntity.ok(CommonResponse.success(reviews, HttpStatus.OK.value(), "Success"));
     }
 
     @PostMapping
-    public ResponseEntity<CommonResponse<ReviewDto>> addReview(@Valid @RequestBody ReviewDto reviewDto) { // Expect ReviewDto in request body
-        ReviewDto addedReview = reviewService.addReview(convertToEntity(reviewDto)); // Convert DTO to Entity before service call
+    public ResponseEntity<CommonResponse<ReviewDto>> addReview(@Valid @RequestParam Long userId, @RequestParam Long productOfferingId, @RequestBody ReviewDto reviewDto) { // Expect ReviewDto in request body
+        ReviewDto addedReview = reviewService.addReview(userId, productOfferingId, convertToEntity(reviewDto)); // Convert DTO to Entity before service call
         return new ResponseEntity<>(CommonResponse.success(convertToDto(addedReview), HttpStatus.CREATED.value(), "Review added successfully"), HttpStatus.CREATED); // Convert Entity back to DTO for response
     }
 

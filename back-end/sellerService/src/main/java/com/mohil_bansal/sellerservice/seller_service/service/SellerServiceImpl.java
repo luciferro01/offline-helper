@@ -1,6 +1,9 @@
 package com.mohil_bansal.sellerservice.seller_service.service;
 
+import com.mohil_bansal.sellerservice.seller_service.client.ProductServiceClient;
+import com.mohil_bansal.sellerservice.seller_service.dto.ProductDto;
 import com.mohil_bansal.sellerservice.seller_service.dto.ProductOfferingDto;
+import com.mohil_bansal.sellerservice.seller_service.dto.SearchProductOfferingDto;
 import com.mohil_bansal.sellerservice.seller_service.dto.SellerDto;
 import com.mohil_bansal.sellerservice.seller_service.entity.ProductOffering;
 import com.mohil_bansal.sellerservice.seller_service.entity.Seller;
@@ -26,6 +29,12 @@ public class SellerServiceImpl implements SellerService {
     private SellerRepository sellerRepository;
 
     @Autowired
+    private ProductOfferingRepository productOfferingRepository;
+
+    @Autowired
+    private ProductServiceClient productServiceClient;
+
+    @Autowired
     private KafkaTemplate<String, ProductOfferingUpdateEvent> kafkaTemplate;
 
     @Override
@@ -44,7 +53,8 @@ public class SellerServiceImpl implements SellerService {
     @Override
     public SellerDto getSellerById(Long id) {
         log.info("Getting seller by id : " + id);
-        Seller seller = sellerRepository.findById(id).orElseThrow(()-> new ResourceNotFoundException("Seller not found with id: " + id));
+        Seller seller = sellerRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Seller not found with id: " + id));
         return convertToDto(seller);
     }
 
@@ -83,21 +93,19 @@ public class SellerServiceImpl implements SellerService {
         return sellerDto;
     }
 
-
-    @Autowired
-    private ProductOfferingRepository productOfferingRepository;
-
     @Override
     public ProductOfferingDto getProductOffering(Long productOfferingId) {
         log.info("Getting product offering : " + productOfferingId);
-        ProductOffering productOffering = productOfferingRepository.findById(productOfferingId).orElseThrow(() -> new ResourceNotFoundException("Product Offering not found with id: " + productOfferingId));
+        ProductOffering productOffering = productOfferingRepository.findById(productOfferingId).orElseThrow(
+                () -> new ResourceNotFoundException("Product Offering not found with id: " + productOfferingId));
         return convertToDto(productOffering);
     }
-    
+
     @Override
     public List<ProductOfferingDto> getProductOfferingsBySeller(Long sellerId) {
         log.info("Getting product offerings for seller id : " + sellerId);
-        Seller seller = sellerRepository.findById(sellerId).orElseThrow(() -> new ResourceNotFoundException("Seller not found with id: " + sellerId));
+        Seller seller = sellerRepository.findById(sellerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Seller not found with id: " + sellerId));
         List<ProductOffering> offerings = productOfferingRepository.findBySellerId(sellerId);
         if (offerings.isEmpty()) {
             log.warn("No product offerings found for seller id: " + sellerId);
@@ -109,42 +117,11 @@ public class SellerServiceImpl implements SellerService {
     }
 
     @Override
-    public ProductOfferingDto addProductOffering(ProductOfferingDto offeringDto) {
-        log.info("Adding product offering for seller id: " + offeringDto.getSellerId());
-        if (!sellerRepository.existsById(offeringDto.getSellerId())) {
-            log.error("Seller not found with id: " + offeringDto.getSellerId());
-            throw new ResourceNotFoundException("Seller not found with id: " + offeringDto.getSellerId());
-        }
-        if (productOfferingRepository.existsBySellerIdAndProductId(offeringDto.getSellerId(), offeringDto.getProductId())) {
-            log.error("Product offering already exists for seller id: " + offeringDto.getSellerId() + " and product id: " + offeringDto.getProductId());
-            throw new DataAlreadyExistsException("Product offering already exists for this seller and product");
-        }
-        ProductOffering offering = convertToEntity(offeringDto);
-        offering = productOfferingRepository.save(offering);
-
-
-
-        // Publish Kafka Event for Product Offering Creation
-//        ProductOfferingDto savedOfferingDto = convertToDto(offering);
-        ProductOfferingUpdateEvent createEvent = new ProductOfferingUpdateEvent("CREATE", offeringDto);
-        kafkaTemplate.send("product-updates", String.valueOf(offeringDto.getId()), createEvent);
-
-
-
-        Seller seller = sellerRepository.findById(offeringDto.getSellerId())
-                .orElseThrow(() -> new ResourceNotFoundException("Seller not found with id: " + offeringDto.getSellerId()));
-        seller.setTotalStock(seller.getTotalStock() + offering.getStock());
-        seller.setTotalSold(seller.getTotalSold() + offering.getSold());
-        sellerRepository.save(seller);
-
-        return convertToDto(offering);
-    }
-
-    @Override
     public ProductOfferingDto updateProductOffering(Long productOfferingId, ProductOfferingDto offeringDto) {
         log.info("Updating product offering with id: " + productOfferingId);
         ProductOffering offering = productOfferingRepository.findById(productOfferingId)
-                .orElseThrow(() -> new ResourceNotFoundException("Product offering not found with id: " + productOfferingId));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Product offering not found with id: " + productOfferingId));
 
         int oldStock = offering.getStock();
         int oldSold = offering.getSold();
@@ -165,22 +142,163 @@ public class SellerServiceImpl implements SellerService {
         offering = productOfferingRepository.save(offering);
 
 
-
-        // Publish Kafka Event for Product Offering Update
-        ProductOfferingDto updatedOfferingDto = convertToDto(offering);
-        ProductOfferingUpdateEvent updateEvent = new ProductOfferingUpdateEvent("UPDATE", updatedOfferingDto);
-        kafkaTemplate.send("product-updates", String.valueOf(updatedOfferingDto.getId()), updateEvent);
-
-
-
         Seller seller = sellerRepository.findById(offering.getSellerId())
-                .orElseThrow(() -> new ResourceNotFoundException("Seller not found with id: " + offeringDto.getSellerId()));
-        seller.setTotalStock(seller.getTotalStock() - (oldStock + offering.getStock()));
-        seller.setTotalSold(seller.getTotalSold() - (oldSold + offering.getSold()));
-        seller.setRating( ( ( seller.getRating() * (seller.getTotalSold()-1) ) + offering.getRating() ) / (seller.getTotalSold()) );
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Seller not found with id: " + offeringDto.getSellerId()));
+        if(seller.getTotalSold()==null)
+            seller.setTotalSold(0);
+        if(seller.getTotalStock()==null)
+            seller.setTotalStock(0);
+        log.info("Seller's total sold is {}",seller.getTotalSold());
+        log.info("Seller's total stock is {}",seller.getTotalStock());
+        double weightedRating=0.0;
+        if (seller.getTotalSold() > 0 && offering.getSold() > 0) {
+            int totalUnitsSold = seller.getTotalSold() + offering.getSold();
+//            double weightedRating = ((seller.getRating() * seller.getTotalSold())
+//                    + (offering.getRating() * offering.getSold())) / totalUnitsSold;
+//            seller.setRating(weightedRating);
+            weightedRating = (((seller.getRating()== null ? 0 : seller.getRating() )* seller.getTotalSold())
+                    + ((offering.getRating() == null ? 0 : offering.getRating()) * offering.getSold())) / totalUnitsSold;
+        }
+        seller.setTotalStock(seller.getTotalStock() - oldStock + offering.getStock());
+        seller.setTotalSold(seller.getTotalSold() - oldSold + offering.getSold());
+
+        if(weightedRating!=0.0) // to update the seller rating dynamically
+            seller.setRating(weightedRating);
         sellerRepository.save(seller);
 
+
+        // Search Product Offering Update
+
+        ProductDto productDetails = productServiceClient
+                .getProductById(offering.getProductId()).getData();
+
+        int totalProductsOffered = getProductOfferingsBySeller(seller.getId()).size();
+
+        SearchProductOfferingDto searchProductOfferingDto = new SearchProductOfferingDto();
+
+        searchProductOfferingDto.setProductOfferingId(String.valueOf(offering.getId()));
+        searchProductOfferingDto.setProductId(productDetails.getId());
+        searchProductOfferingDto.setProductName(productDetails.getName());
+        searchProductOfferingDto.setSellerId(offering.getSellerId());
+        searchProductOfferingDto.setSellerName(offering.getSellerName());
+        searchProductOfferingDto.setPrice(offering.getPrice());
+        searchProductOfferingDto.setStock(offering.getStock());
+        searchProductOfferingDto.setSellerRating((seller.getRating()== null ? 0 : seller.getRating() ));
+        searchProductOfferingDto.setTotalProductsOffered(totalProductsOffered);
+        searchProductOfferingDto.setProductsSoldCount(seller.getTotalSold());
+        searchProductOfferingDto.setProductReviews(offering.getSold());
+        searchProductOfferingDto.setCategory(productDetails.getCategoryName());
+        searchProductOfferingDto.setProductRating((offering.getRating() == null ? 0 : offering.getRating()));
+        String id = offering.getId() + "-" + offering.getProductId();
+        searchProductOfferingDto.setId(id);
+
+
+        // Publish Kafka Event for Product Offering Update
+        ProductOfferingUpdateEvent updateEvent = new ProductOfferingUpdateEvent("UPDATE", searchProductOfferingDto);
+        kafkaTemplate.send("product-updates", String.valueOf(searchProductOfferingDto.getId()), updateEvent);
+
+        ProductOfferingDto updatedOfferingDto = convertToDto(offering);
+        System.out.println(updatedOfferingDto);
         return convertToDto(offering);
+    }
+
+    @Override
+    public ProductOfferingDto addProductOffering(ProductOfferingDto offeringDto) {
+        log.info("Adding product offering for seller id: " + offeringDto.getSellerId());
+        Seller seller = sellerRepository.findById(offeringDto.getSellerId()) // Fetch Seller Entity
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Seller not found with id: " + offeringDto.getSellerId()));
+
+        String productName = null;
+        String productImageUrl = null;
+
+        try {
+            ProductDto productDetails = productServiceClient
+                    .getProductById(offeringDto.getProductId()).getData();
+            System.out.println("ProductDto received from ProductServiceClient: " + productDetails);
+
+            log.info("Product ID {} validated successfully with Product Service.", offeringDto.getProductId());
+
+            if (productDetails != null) {
+                productName = productDetails.getName();
+                productImageUrl = productDetails.getImagesUrl();
+                log.info("Product Name: {}, Images: {} fetched from Product Service", productName, productImageUrl);
+            }
+
+        } catch (Exception e) {
+            log.error("Product ID {} not found in Product Service. Product Offering creation failed.",
+                    offeringDto.getProductId());
+            throw new ResourceNotFoundException(
+                    "Product not found with id: " + offeringDto.getProductId() + " in Product Catalog.");
+        }
+
+        if (productOfferingRepository.existsBySellerIdAndProductId(offeringDto.getSellerId(),
+                offeringDto.getProductId())) {
+            log.error("Product offering already exists for seller id: " + offeringDto.getSellerId()
+                    + " and product id: " + offeringDto.getProductId());
+            throw new DataAlreadyExistsException("Product offering already exists for this seller and product");
+        }
+
+        String sellerName = seller.getName();// Get sellerName from Seller entity
+        log.info("Values before convertToEntity: offeringDto={}, productName={}, productImageUrl={}, sellerName={}",
+                offeringDto, productName, productImageUrl, sellerName); // LOGGING
+        ProductOffering offering = convertToEntity(offeringDto, sellerName, productName, productImageUrl); // Pass
+
+
+
+        offering = productOfferingRepository.save(offering);
+        seller.setTotalStock(seller.getTotalStock() + offering.getStock());
+        seller.setTotalSold(seller.getTotalSold() + offering.getSold());
+        sellerRepository.save(seller);
+                                                                                                           // sellerName
+        // Search Product Offering Kafka
+        ProductDto productDetails = productServiceClient
+                .getProductById(offeringDto.getProductId()).getData();
+
+        int totalProductsOffered = getProductOfferingsBySeller(seller.getId()).size();
+
+        SearchProductOfferingDto searchProductOfferingDto = new SearchProductOfferingDto();
+
+        searchProductOfferingDto.setProductOfferingId(String.valueOf(offering.getId()));
+        searchProductOfferingDto.setProductId(productDetails.getId());
+        searchProductOfferingDto.setProductName(productDetails.getName());
+        searchProductOfferingDto.setSellerId(offering.getSellerId());
+        searchProductOfferingDto.setSellerName(offering.getSellerName());
+        searchProductOfferingDto.setPrice(offering.getPrice());
+        searchProductOfferingDto.setStock(offering.getStock());
+        searchProductOfferingDto.setSellerRating((seller.getRating()== null ? 0 : seller.getRating() ));
+        searchProductOfferingDto.setTotalProductsOffered(totalProductsOffered);
+        searchProductOfferingDto.setProductsSoldCount(seller.getTotalSold());
+        searchProductOfferingDto.setProductReviews(0);
+        searchProductOfferingDto.setCategory(productDetails.getCategoryName());
+        searchProductOfferingDto.setProductRating((offering.getRating() == null ? 0 : offering.getRating()));
+        String id = offering.getId() + "-" + offering.getProductId();
+        searchProductOfferingDto.setId(id);
+
+        ProductOfferingUpdateEvent createEvent = new ProductOfferingUpdateEvent("CREATE", searchProductOfferingDto);
+        kafkaTemplate.send("product-updates", String.valueOf(searchProductOfferingDto.getId()), createEvent);
+
+
+
+        return convertToDto(offering);
+    }
+
+    @Override
+    public List<SellerDto> getSellersForProduct(Long productId){
+        log.info("Getting all sellers for Product ID : {}", productId);
+        List<ProductOffering> offerings = productOfferingRepository.findByProductId(productId);
+
+        List<Long> sellerIds = offerings.stream()
+                .map(ProductOffering::getSellerId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        List<Seller> sellers = sellerRepository.findAllById(sellerIds);
+
+        return sellers.stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
     }
 
     private ProductOfferingDto convertToDto(ProductOffering offering) {
@@ -193,22 +311,26 @@ public class SellerServiceImpl implements SellerService {
                 offering.getPrice(),
                 offering.getStock(),
                 offering.getSold(),
-                offering.getRating()
-        );
+                offering.getRating(),
+                // offering.getImages()
+                offering.getProductImageUrl());
     }
 
-    private ProductOffering convertToEntity(ProductOfferingDto dto) {
+    private ProductOffering convertToEntity(ProductOfferingDto dto, String sellerName, String productName,
+            String productImageUrl) {
         return new ProductOffering(
                 dto.getId(),
                 dto.getSellerId(),
                 dto.getProductId(),
-                dto.getSellerName(),
-                dto.getProductName(),
+                sellerName,
+                productName,
                 dto.getPrice(),
                 dto.getStock(),
                 dto.getSold(),
                 dto.getRating(),
-                null
-        );
+                null, // createdAt - will be set by @PrePersist
+                // productImages
+                productImageUrl);
     }
+
 }

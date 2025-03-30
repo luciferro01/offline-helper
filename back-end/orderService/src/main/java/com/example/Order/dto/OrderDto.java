@@ -14,6 +14,8 @@ public class OrderDto {
     private Long id;
     private Long userId;
     private Long productOfferingId;
+    private String productOfferingName;
+    private String productImageUrl;
     private Double price;
     private Integer quantity;
     private Timestamp createdAt;
@@ -69,5 +71,21 @@ public class OrderDto {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getProductOfferingName() {
+        return productOfferingName;
+    }
+
+    public void setProductOfferingName(String productOfferingName) {
+        this.productOfferingName = productOfferingName;
+    }
+
+    public String getProductImageUrl() {
+        return productImageUrl;
+    }
+
+    public void setProductImageUrl(String productImageUrl) {
+        this.productImageUrl = productImageUrl;
     }
 }

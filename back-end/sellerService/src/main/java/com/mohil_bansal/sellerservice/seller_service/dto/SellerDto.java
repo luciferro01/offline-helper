@@ -13,7 +13,7 @@ public class SellerDto {
     private String email;
     private String phoneNumber;
     private String address;
-    private Integer totalStock;
-    private Integer totalSold;
-    private Double rating;
+    private Integer totalStock ;
+    private Integer totalSold ;
+    private Double rating=0.0;
 }
